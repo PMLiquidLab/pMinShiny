@@ -1,0 +1,15 @@
+Package: pMinShiny
+Type: Package
+Title: A visual tool for the process mining analysis
+Version: 0.1.0
+Author: Mariagrazia Lorusso [aut, cre].
+  Arianna Dagliati [ctb],
+  Lucia Sacchi [ctb],
+  Roberto Gatta [ctb]
+Maintainer: Mariagrazia Lorusso <lorusso.mariagrazia01@gmail.com>
+Description: A Graphical User Interface for pMineR
+License: GPL
+Encoding: UTF-8
+LazyData: true
+Imports: shiny, dplyr, pMineR, lubridate, UpSetR, rlang, shinyWidgets, DT, shinybusy, dbplyr, XML, cluster, data.table, ggplot2, kableExtra, shinyjqui, DiagrammeR, shinythemes, sortable, shinydashboard, timevis, survival, survminer, utils, graphics, stats
+RoxygenNote: 7.1.2
