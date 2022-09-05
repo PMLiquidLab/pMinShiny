@@ -3,5 +3,5 @@
 .RData
 .Ruserdata
 ./man
-./Rbuildignore.*
+.Rbuildignore
 *.Rproj
