@@ -19,6 +19,9 @@ cov_time_fun<-function(ObjDL,
                        UM="days",
                        plot.points=TRUE,
                        plot.RegressionLine=FALSE,
+                       plot.ci.mean=FALSE,
+                       alfa=0.05,
+                       delta=10,
                        points.symbols=20,
                        size.symbols=1.5,
                        line.width=2,
@@ -101,41 +104,34 @@ cov_time_fun<-function(ObjDL,
           mat_cov <- lapply(id.paz.out, function(ID){
             a <- sub.path[[arr.from[ind.from]]][[ID]]
             if(covariate.type == 'attribute'){
-              # a$time <- (a$pMineR.deltaDate - a[1, 'pMineR.deltaDate'])/1440
               a <- a[which(!is.na(a[[covariate]])), c( ObjDL.out$csv.IDName, 'pMineR.deltaDate', covariate)]
             }else{
               #LOGICA PER covariate.type="event" !
             }
+
+
             return(a)
           })
 
+
+
           mat_new <- as.data.frame(do.call('rbind', mat_cov))
-          mat_new$nodo_IN <-arr.from[ind.from]
-          mat_new$nodo_OUT <-arr.node.to[ind.to]
-          return(mat_new)
+
+          if(nrow(mat_new)>0){
+            mat_new$nodo_IN <-arr.from[ind.from]
+            mat_new$nodo_OUT <-arr.node.to[ind.to]
+            to_ret<-mat_new
+          }else{
+            to_ret<-NULL
+          }
+
+          return(to_ret)
+
+          # mat_new$nodo_IN <-arr.from[ind.from]
+          # mat_new$nodo_OUT <-arr.node.to[ind.to]
+          # return(mat_new)
 
         }
-
-        # #per ogni percorso nodo.in-nodo.out estraggo popolazione e valore della covariata:
-        # #id.paz.out sono id paz nell'intersezione nodo.start-nodo.end:
-        #
-        # id.paz.out<-id.paz.from[which(id.paz.from %in% CFMstructure$lst.nodi[[arr.node.to[ind.to]]]$IPP)]
-        # #per ogni ID prendo valore di cov e tempi
-        # mat_cov <- lapply(id.paz.out, function(ID){
-        #   a <- sub.path[[arr.from[ind.from]]][[ID]]
-        #   if(covariate.type == 'attribute'){
-        #     # a$time <- (a$pMineR.deltaDate - a[1, 'pMineR.deltaDate'])/1440
-        #     a <- a[which(!is.na(a[[covariate]])), c( ObjDL.out$csv.IDName, 'pMineR.deltaDate', covariate)]
-        #   }else{
-        #     #LOGICA PER covariate.type="event" !
-        #   }
-        #   return(a)
-        # })
-        #
-        # mat_new <- as.data.frame(do.call('rbind', mat_cov))
-        # mat_new$nodo_IN <-arr.from[ind.from]
-        # mat_new$nodo_OUT <-arr.node.to[ind.to]
-        # return(mat_new)
       })
 
       return(df_path_tot<-as.data.frame(do.call('rbind', df_path)))
@@ -144,19 +140,25 @@ cov_time_fun<-function(ObjDL,
 
     #df_tot è il df che contine tutti i valori delle cov per ciascun paziente con relativo nodo in e nodo out
     df_tot <- do.call('rbind', df_tot)
-    # df_tot <- df_tot[which(df_tot$time <= xlim),]
-    if(class(df_tot[[covariate]])=="factor"){
-      df_tot[[covariate]]<-as.numeric(levels(df_tot[[covariate]]))[df_tot[[covariate]]]
-    }else{
-      df_tot[[covariate]] <- as.numeric(df_tot[[covariate]])
-    }
-    df_tot[[covariate]] <- as.numeric(df_tot[[covariate]])
-    colnames(df_tot) <- c('ID', 'time', 'covariate', 'nodo_IN', 'nodo_OUT')
 
-    if( UM == "days") df_tot$time <- df_tot$time / 1440
-    if( UM == "hours") df_tot$time <- df_tot$time / 60
-    if( UM == "weeks") df_tot$time <- df_tot$time / (1440 * 7)
-    if( UM == "months") df_tot$time <- df_tot$time / (43800)
+    if(nrow(df_tot)>0){
+      # df_tot <- df_tot[which(df_tot$time <= xlim),]
+      if(class(df_tot[[covariate]])=="factor"){
+        df_tot[[covariate]]<-as.numeric(levels(df_tot[[covariate]]))[df_tot[[covariate]]]
+      }else{
+        df_tot[[covariate]] <- as.numeric(df_tot[[covariate]])
+      }
+      df_tot[[covariate]] <- as.numeric(df_tot[[covariate]])
+      colnames(df_tot) <- c('ID', 'time', 'covariate', 'nodo_IN', 'nodo_OUT')
+
+      if( UM == "days") df_tot$time <- df_tot$time / 1440
+      if( UM == "hours") df_tot$time <- df_tot$time / 60
+      if( UM == "weeks") df_tot$time <- df_tot$time / (1440 * 7)
+      if( UM == "months") df_tot$time <- df_tot$time / (43800)
+    }else{
+      df_tot<-NULL
+    }
+
   }else{
    #CASO C) GRAFICI ANDAMENTALI PER VARIABILI CATEGORICHE:ERRORE
     df_tot<-NULL
@@ -182,9 +184,16 @@ cov_time_fun<-function(ObjDL,
 
 
     for (i in 1:nrow(path)){
+
       dati <- df_tot[which(df_tot$nodo_IN == path[i,"nodo_IN"] & df_tot$nodo_OUT == path[i,"nodo_OUT"]),]
       if(plot.RegressionLine){
         model <- glm(covariate ~ time, data = dati, family = 'gaussian')
+      }
+      if(!plot.ci.mean){
+        y.lim=c(min(df_tot$covariate),max(df_tot$covariate))
+      }else{
+        d_mean<-ci.mean.fun(alfa,delta,dati)
+        y.lim=y.lim=c(min(min(d_mean$lower),min(df_tot$covariate)),max(max(df_tot$covariate),max(d_mean$upper)))
       }
       if(i == 1){
         plot(covariate ~ time,
@@ -192,7 +201,7 @@ cov_time_fun<-function(ObjDL,
              type = tipo_punti,
              pch = points.symbols,
              cex = size.symbols,
-             ylim=c(min(df_tot$covariate),max(df_tot$covariate)),
+             ylim=y.lim,
 
              xlim = c(0,max(df_tot$time)),
              # xlim = c(0,xlim),
@@ -205,7 +214,16 @@ cov_time_fun<-function(ObjDL,
                    lwd = line.width,
                    lty = tipo_linea)
           }
-
+        }
+        if(plot.ci.mean){
+          lines(x = d_mean$time,y = d_mean$mean,type = "l",xlab = "time",ylab = "mean", ylim = c(min(d_mean$lower),max(d_mean$upper)),col=arr.colore[i,'colore'])
+          col<-col2rgb(arr.colore[i,'colore'], alpha = FALSE)/255
+          polygon(x=c(d_mean$time,
+                      rev(d_mean$time)),
+                  y=c(d_mean$upper, rev(d_mean$lower)),
+                  col=rgb(red =col[1,1],green =col[2,1] ,blue =col[3,1] ,alpha = 0.1
+                  ),
+                  density = 300, angle=90)
         }
       }else{
         points(covariate ~ time,
@@ -222,8 +240,24 @@ cov_time_fun<-function(ObjDL,
                    lty = tipo_linea)
           }
         }
+        if(plot.ci.mean){
+
+          lines(x = d_mean$time,y = d_mean$mean,type = "l",xlab = "time",ylab = "mean", ylim = c(min(d_mean$lower),max(d_mean$upper)),col=arr.colore[i,'colore'])
+          col<-col2rgb(arr.colore[i,'colore'], alpha = FALSE)/255
+          polygon(x=c(d_mean$time,
+                      rev(d_mean$time)),
+                  y=c(d_mean$upper, rev(d_mean$lower)),
+                  col=rgb(red =col[1,1],green =col[2,1] ,blue =col[3,1] ,alpha = 0.1
+                  ),
+                  density = 300, angle=90)
+        }
       }
+
+
     }
+
+
+
     arr.colore$nomi_nodi_in <- unlist(lapply(arr.colore$nodo_IN, function(x){paste(x, CFMstructure$lst.nodi[[x]]$evento, sep = '-')} ))
     arr.colore$nomi_nodi_out <- unlist(lapply(arr.colore$nodo_OUT, function(x){paste(x, CFMstructure$lst.nodi[[x]]$evento, sep = '-')} ))
     arr.colore$Nome_coppie_nodi <- paste('From:', arr.colore$nomi_nodi_in, 'to:', arr.colore$nomi_nodi_out)
@@ -231,7 +265,6 @@ cov_time_fun<-function(ObjDL,
            legend <- arr.colore$Nome_coppie_nodi,
            col=arr.colore[1:nrow(arr.colore),'colore'],
            lty = 1,
-           # text.width = strwidth(arr.colore$Nome_coppie_nodi)[1]/6,
            lwd = 3,
            y.intersp =  y.int.legend,
            cex=legend.text.size,
@@ -244,8 +277,6 @@ cov_time_fun<-function(ObjDL,
   }
 
 }
-
-
 
 
 

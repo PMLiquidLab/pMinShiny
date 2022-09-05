@@ -643,6 +643,20 @@ server.careFlow<-function(input,output,session){
                                                           )
                                                           )
                                                  ),
+                                                 fluidRow(
+                                                   column(6,
+                                                          materialSwitch(
+                                                            inputId = "mean.ci",
+                                                            label = "plot mean and c.i.",
+                                                            status = "primary",
+                                                            right = TRUE
+                                                            )
+                                                     ),
+                                                   column(6,
+                                                          numericInput("delta.mean.ci", label = "Select time window:", value = 10,min = 5),
+                                                          )
+
+                                                 ),
 
                                                  #  UM="days",
 
@@ -772,6 +786,10 @@ server.careFlow<-function(input,output,session){
                          arr.from = arr.from,
                          lst.to,
                          covariate.type ='attribute',
+                         plot.ci.mean=input$mean.ci,
+                         delta = input$delta.mean.ci,
+
+
                          # is.numerical=input$is.numerical,
                          points.symbols=20,
                          plot.RegressionLine = input$reg.line,
