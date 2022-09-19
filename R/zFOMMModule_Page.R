@@ -13,6 +13,7 @@
 
 
 
+
 server.FOMM<-function(input,output,session){
   #visualizzazione EventLog
   tab<-callModule(import_data_server,"uploadEL","EventLog")
@@ -24,13 +25,25 @@ server.FOMM<-function(input,output,session){
     EventLog=data.frame(),
     th = c(),  #threshold
     al = c(),  #autoloops
-    FOMM = c()
+    FOMM = c(),
+    numerical.att = c(),
+    fun.train.out= list()
   )
 
 
   #TAB EVENTLOG: data visualization of eventlog
   observeEvent(input$loadEL,{
     data_reactive$EventLog <- all.data[["EventLog"]]
+    arr.attributi<-c()
+    for (i in c(1:length(colnames(data_reactive$EventLog)))) {
+      name<-colnames(data_reactive$EventLog)[i]
+      if(length(unique(data_reactive$EventLog[,name]))>20){
+        arr.attributi[i]<-colnames(data_reactive$EventLog)[i]
+      }
+    }
+    arr.attributi<-arr.attributi[-which(arr.attributi %in% c("ID","DATE_INI","EVENT",NA))]
+
+    data_reactive$numerical.att<-arr.attributi
 
 
     if(is_empty(data_reactive$EventLog)){
@@ -393,7 +406,390 @@ server.FOMM<-function(input,output,session){
                 ),
                 target = "Survival Analysis",
                 position = "after"
+      )
+
+      ################################################# TAB PREDICTIVE MODEL:LR ########################################################
+      removeTab(inputId = "tabs", target = "Predictive Model")
+      insertTab(inputId = "tabs",
+                tabPanel("Predictive Model",
+                         titlePanel("Predictive Process Discovery"),
+                         fluidRow(
+                           column(12,
+                                  sidebarLayout(
+                                    sidebarPanel(
+                                      #RIGA 1:input x event start & event goal
+                                      fluidRow(
+                                        column(6,
+                                               pickerInput(inputId ="eventoDiPartenza", label = "select event start",
+                                                           choices =  unique(data_reactive$EventLog$EVENT),
+                                                           multiple = FALSE,
+                                                           selected = NULL,
+                                                           options = list(
+                                                             title = "select event"))
+                                               ),
+                                        column(6,
+                                               pickerInput(inputId ="eventoGoal", label = "select event goal",
+                                                           choices =  unique(data_reactive$EventLog$EVENT),
+                                                           multiple = FALSE,
+                                                           selected = NULL,
+                                                           options = list(
+                                                             title = "select event"))
+                                               )
+                                      ),
+
+                                      #RIGA 2: FILTERING ON PATH
+                                      fluidRow(
+                                        column(6,
+                                               pickerInput(inputId ="passing", label = "passing through",
+                                                           choices =  unique(data_reactive$EventLog$EVENT),
+                                                           multiple = TRUE,
+                                                           selected = NULL,
+                                                           options = list(
+                                                             title = "select event"))
+                                        ),
+                                        column(6,
+                                               pickerInput(inputId ="NOTpassing", label = "NOT passing through",
+                                                           choices =  unique(data_reactive$EventLog$EVENT),
+                                                           multiple = TRUE,
+                                                           selected = NULL,
+                                                           options = list(
+                                                             title = "select event"))
+                                        )
+                                      ),
+
+                                      fluidRow(
+                                        column(3,
+                                               numericInput("min.time", label = "min time", value = 0, min = 0, max = Inf)
+
+                                        ),
+                                        column(3,
+                                               numericInput("max.time", label = "max time", value = 30, min = 0, max = Inf)
+                                        ),
+                                        column(2,
+
+
+
+                                               # switchInput(
+                                               #   inputId = "max.time.inf",
+                                               #   label = "Inf",
+                                               #   labelWidth = "20px",
+                                               #   size= "mini",value = TRUE
+                                               # )
+                                               checkboxInput("max.time.inf", label = h6("max = Inf"), value = TRUE),
+                                        ),
+                                        column(4,
+                                               selectInput("um.time",
+                                                           label = "Select the time scale",
+                                                           choices = c("mins","hours","days","weeks","months"),
+                                                           selected = "days")
+                                               )
+                                      ),
+
+                                      #RIGA 3: input x arr_att & feature-selection
+                                      fluidRow(
+                                        column(6,
+                                               pickerInput(
+                                                 inputId = "arr.attributi",
+                                                 label = "Select/deselect attributes",
+                                                 choices = data_reactive$numerical.att,
+                                                 options = list(
+                                                   `actions-box` = TRUE),
+                                                 multiple = TRUE)
+                                               ),
+                                        column(6,
+                                               br(),
+                                               materialSwitch(
+                                                 inputId = "feature_selection",
+                                                 label = "Feature Selection",value = FALSE
+                                               )
+                                               )
+
+                                      ),
+                                      tags$hr(),
+
+                                      #RIGA FACOLTATIVA IN CASO DI FEATURE SELECTION
+                                      conditionalPanel(condition = "input.feature_selection",
+                                        fluidRow(
+                                          column(6,
+                                                 numericInput("n.att", label = "number of covariate", value = 1, min = 1, max = length(data_reactive$numerical.att)),
+                                                 ),
+                                          column(6,
+                                                 numericInput("p.thr", label = "min p-value train", value = 0.05, min = 0.05,
+                                                              max = 1,step = 0.01)
+                                                 )
+
+                                        ),
+                                        fluidRow(
+                                          column(6,
+                                                 selectInput(inputId = "tec",label = "select feature selection technique",choices = c("K-fold Cross Vaidation","Hold out"))
+                                                 #select CROSSVAL-HOLD OUT
+                                                 ),
+                                          conditionalPanel(condition = "input.tec =='K-fold Cross Vaidation'",
+                                            column(6,
+                                                   numericInput("k", label = "select number of fold", value = 2, min = 2, max = 10)
+                                                   )
+                                          ),
+                                          conditionalPanel(condition = "input.tec== 'Hold out'",
+                                                           column(6,
+                                                                  numericInput("p.train", label = "select prop of train", value = 0.7, min = 0.1, max = 1,step = 0.1)
+                                                           )
+                                          )
+                                        )
+                                      ),
+                                      fluidRow(
+                                        column(2,offset = 7,
+                                               actionButton(inputId = "train.model","Train Model")
+                                               )
+                                      ),
+                                      # fluidRow(
+                                      #   column(12,
+                                      #          radioButtons('format', 'Document format', c('PDF', 'HTML', 'Word'),
+                                      #                       inline = TRUE),
+                                      #          downloadButton('downloadReport')
+                                      #          )
+                                      # )
+                                    ),
+                                    mainPanel(
+                                      uiOutput("show.train.result")
+                                    )
+                                  )
+                                  )
+                         )
+
+                ),
+                target = "Covariate Visualization",
+                position = "after"
       )}
+
+    arr.ID.train<-sample(x = unique(all.data[[1]]$ID),size = 700)
+    arr.ID.test<-unique(all.data[[1]]$ID)[-which(unique(all.data[[1]]$ID) %in% arr.ID.train)]
+
+    observeEvent(input$train.model,{
+
+
+
+
+
+      if(input$tec=="Hold out"){
+        k<-1
+      }else{
+        k<-input$k
+      }
+
+      if(is.null(input$passing)){
+        passing<-c()
+      }else if(input$passing %in% c(input$eventoDiPartenza, eventoGoal)){
+        passing<-c()
+      }else{
+        passing<-input$passing
+      }
+
+      if(is.null(input$NOTpassing)){
+        NOTpassing<-c()
+      }else if(input$NOTpassing %in% c(input$eventoDiPartenza, eventoGoal, input$passing)){
+        NOTpassing<-c()
+      }else{
+        NOTpassing<-input$NOTpassing
+      }
+
+      if(input$max.time.inf){
+        max_time<-Inf
+      }else{
+        max_time<-input$max.time
+      }
+
+
+
+
+
+
+
+
+      # fun.train.out<-LR_FOMM_fun(eventoDiPartenza = input$eventoDiPartenza,
+      #             obj.out = ObjDL$getData(),
+      #             eventoGoal = input$eventoGoal,
+      #             arr.attributi = input$arr.attributi,
+      #             arr.ID.train = arr.ID.train,
+      #             arr.ID.test = arr.ID.test,
+      #             feature.selection = input$feature_selection,
+      #             k=k,
+      #             passing= passing,
+      #             NOTpassing = NOTpassing,
+      #             p.train=input$p.train,
+      #             p.thr=input$p.thr,
+      #             n.att=input$n.att,
+      #             min.time= input$min.time,
+      #             max.time= max_time,
+      #             UM= input$um.time,for.gui = TRUE)
+
+      # data_reactive$fun.train.out<-fun.train.out
+
+      withProgress(message = 'Calculation in progress',
+                   detail = 'This may take a while...', value = 0, {
+                     tryCatch(
+                       {
+                         data_reactive$fun.train.out<-LR_FOMM_fun(eventoDiPartenza = input$eventoDiPartenza,
+                                                                                 obj.out = ObjDL$getData(),
+                                                                                 eventoGoal = input$eventoGoal,
+                                                                                 arr.attributi = input$arr.attributi,
+                                                                                 arr.ID.train = arr.ID.train,
+                                                                                 arr.ID.test = arr.ID.test,
+                                                                                 feature.selection = input$feature_selection,
+                                                                                 k=k,
+                                                                                 passing= passing,
+                                                                                 NOTpassing = NOTpassing,
+                                                                                 p.train=input$p.train,
+                                                                                 p.thr=input$p.thr,
+                                                                                 n.att=input$n.att,
+                                                                                 min.time= input$min.time,
+                                                                                 max.time= max_time,
+                                                                                 UM= input$um.time,for.gui = TRUE)
+                       },
+                       error = function(e) {
+                         # return a safeError if a parsing error occurs
+                         # stop(safeError(e))
+                         data_reactive$fun.train.out<-list()
+                       })
+                   })
+
+
+      output$show.train.result<-renderUI({
+        fluidPage(
+          fluidRow(
+            DT::dataTableOutput("mat.att")
+          ),
+          fluidRow(
+            uiOutput("results")
+          )
+          # fluidRow(
+          #   DT::dataTableOutput("best.att")
+          # ),
+          # fluidRow(
+          #   DT::dataTableOutput("final.mod.perf.train")
+          # ),
+          # fluidRow(
+          #   DT::dataTableOutput("final.mod.perf.test")
+          # ),
+          # fluidRow(
+          #   plotOutput("final.roc")
+          # )
+        )
+      })
+
+      output$mat.att<- DT::renderDataTable(data_reactive$fun.train.out$mat.perf.total)
+
+
+
+      # output$roc.out<- renderPlot()
+
+
+
+    })
+
+    observeEvent(input$mat.att_rows_selected,{
+      fun.train.out<-data_reactive$fun.train.out
+      output$results<-renderUI({
+        fluidPage(
+          fluidRow(
+            DT::dataTableOutput("final.mod.perf.train")
+          ),
+          fluidRow(
+            DT::dataTableOutput("final.mod.perf.test")
+          ),
+          fluidRow(
+            plotOutput("final.roc")
+          )
+        )
+      })
+
+      output$final.mod.perf.train<- DT::renderDataTable({
+
+        if(length(input$mat.att_rows_selected)){
+          fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_train
+        }
+      })
+      output$final.mod.perf.test<- DT::renderDataTable({
+        if(length(input$mat.att_rows_selected)){
+          fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_test
+        }
+      })
+
+
+
+
+      # pval.test<-t(as.data.frame(fun.train.out$final.model$pval_test))
+      # rownames(pval.test)<-"final model pval (on test)"
+      #
+      # output$best.att<- DT::renderDataTable(pval.test)
+      #
+      # output$final.mod.perf.train<- DT::renderDataTable(fun.train.out$final.model$roc_train)
+      # output$final.mod.perf.test<- DT::renderDataTable(fun.train.out$final.model$roc_test)
+      #
+      output$final.roc<-renderPlot({
+        if(length(input$mat.att_rows_selected)){
+          df_roc<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_train
+          df_roc_test<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_test
+          plot.roc <- plot(df_roc$FPR, df_roc$TPR, type="l", xlim=c(0,1), ylim=c(0,1), lwd=2,
+                           xlab= "FRP",ylab="TPR",col= "gray")+
+            abline(0,1, col="red", lty=2)+
+            text(x = 0.8,y = 0.12, paste("AUC_train =",round(fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$AUC_train,digits = 4)))+
+            points(df_roc_test$FPR, df_roc_test$TPR, type="b", xlim=c(0,1), ylim=c(0,1), lwd=2,
+                   xlab= "FRP",ylab="TPR")+
+            lines(df_roc_test$FPR, df_roc_test$TPR)+
+            abline(0,1, col="red", lty=2)+
+            text(x = 0.8,y = 0.22, paste("AUC_test =",round(fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$AUC_test,digits = 4)))
+          legend('topleft',
+                 legend=c("Test", "Train"),
+                 col=c("black","gray"), lty=c(2,1),
+                 cex=0.8,
+                 bty = 'o'
+
+          )
+        }
+
+
+      })
+
+
+
+
+    })
+
+
+    # output$downloadReport <- downloadHandler(
+    #   # For PDF output, change this to "report.pdf"
+    #   filename = "report.html",
+    #   content = function(file) {
+    #     # Copy the report file to a temporary directory before processing it, in
+    #     # case we don't have write permissions to the current working dir (which
+    #     # can happen when deployed).
+    #     tempReport <- file.path(tempdir(), "report.Rmd")
+    #     file.copy("report.Rmd", tempReport, overwrite = TRUE)
+    #
+    #     # Set up parameters to pass to Rmd document
+    #     params <- list(n = input$slider)
+    #
+    #     # Knit the document, passing in the `params` list, and eval it in a
+    #     # child of the global environment (this isolates the code in the document
+    #     # from the code in this app).
+    #     rmarkdown::render(tempReport, output_file = file,
+    #                       params = params,
+    #                       envir = new.env(parent = globalenv())
+    #     )
+    #   }
+    # )
+
+
+
+
+
+
+
+
+
+
+
+
 
     observeEvent(input$add.node.end,{
       if(!is.null(input$node.start.cov)){
