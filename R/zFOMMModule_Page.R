@@ -81,7 +81,7 @@ server.FOMM<-function(input,output,session){
       ObjDL$load.data.frame(mydata =data_reactive$EventLog ,IDName = "ID",EVENTName = "EVENT",dateColumnName = "DATE_INI",
                             format.column.date = "%Y-%m-%d")
       removeModal()
-      globalList <- reactiveValues(ManyChoices = unique(all.data[[1]]$EVENT), SelectedPrev = c())
+      globalList <- reactiveValues(ManyChoices = unique(data_reactive$EventLog$EVENT), SelectedPrev = c())
 
 
 
