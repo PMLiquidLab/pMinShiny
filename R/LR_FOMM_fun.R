@@ -49,7 +49,7 @@
 # out2<-LR_FOMM_fun(eventoDiPartenza = eventoDiPartenza,
 #                   obj.out = obj.out,
 #                   eventoGoal = eventoGoal,
-#                   arr.attributi = c("Age_onset","Onset_Delta","Blood_Pressure_Systolic__mmHg"),
+#                   arr.attributi =arr.attributi,
 #                   arr.ID.train = arr.ID.train,
 #                   arr.ID.test = arr.ID.test,
 #                   feature.selection = FALSE)
@@ -174,6 +174,7 @@ LR_FOMM_fun<-function(eventoDiPartenza,
   ###################################   DIVISIONE TRAIN - TEST #########################################
   df_train <-df_tot[which(df_tot$ID %in% arr.ID.train),]
   df_test  <-df_tot[which(df_tot$ID %in% arr.ID.test),]
+
 
 
 
@@ -428,13 +429,13 @@ LR_FOMM_fun<-function(eventoDiPartenza,
                                chosen.digit = 4,
                                perf.train = TRUE)
 
-    mat.att<-matrix(ncol = n.att+3)
+    mat.att<-matrix(ncol = length(arr.attributi)+3)
     mat.att[1,]<-c(arr.attributi,
                    final.model$AUC_test,
                    final.model$roc_test[which(final.model$roc_test$accuracy==max(final.model$roc_test$accuracy)),"accuracy"][1],
                    final.model$roc_test[which(final.model$roc_test$accuracy==max(final.model$roc_test$accuracy)),"threshold"][1]
                    )
-    colnames(mat.att)<-c(paste0("covariate_",seq_along(1:n.att)),"AUC.on.test.fold","threshold","accuracy")
+    colnames(mat.att)<-c(paste0("covariate_",seq_along(1:length(arr.attributi))),"AUC.on.test.fold","threshold","accuracy")
     arr.acc<-NULL
     arr.AUC<-NULL
     mat.att.total<-mat.att

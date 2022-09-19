@@ -705,39 +705,49 @@ server.FOMM<-function(input,output,session){
       output$final.mod.perf.train<- DT::renderDataTable({
 
         if(length(input$mat.att_rows_selected)){
-          fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_train
+          if(!input$feature_selection){
+            fun.train.out$final.model$roc_train
+          }else{
+            fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_train
+          }
+
         }
       })
       output$final.mod.perf.test<- DT::renderDataTable({
         if(length(input$mat.att_rows_selected)){
-          fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_test
+          if(!input$feature_selection){
+            fun.train.out$final.model$roc_test
+          }else{
+            fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_test
+          }
+
         }
       })
 
-
-
-
-      # pval.test<-t(as.data.frame(fun.train.out$final.model$pval_test))
-      # rownames(pval.test)<-"final model pval (on test)"
-      #
-      # output$best.att<- DT::renderDataTable(pval.test)
-      #
-      # output$final.mod.perf.train<- DT::renderDataTable(fun.train.out$final.model$roc_train)
-      # output$final.mod.perf.test<- DT::renderDataTable(fun.train.out$final.model$roc_test)
-      #
       output$final.roc<-renderPlot({
+
         if(length(input$mat.att_rows_selected)){
-          df_roc<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_train
-          df_roc_test<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_test
+          if(!input$feature_selection){
+            df_roc<-fun.train.out$final.model$roc_train
+            df_roc_test<-fun.train.out$final.model$roc_test
+            AUC<-fun.train.out$final.model$AUC_train
+            AUC_test<-fun.train.out$final.model$AUC_test
+          }else{
+            df_roc<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_train
+            df_roc_test<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$roc_test
+            AUC<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$AUC_train
+            AUC_test<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$AUC_test
+          }
+
           plot.roc <- plot(df_roc$FPR, df_roc$TPR, type="l", xlim=c(0,1), ylim=c(0,1), lwd=2,
                            xlab= "FRP",ylab="TPR",col= "gray")+
             abline(0,1, col="red", lty=2)+
-            text(x = 0.8,y = 0.12, paste("AUC_train =",round(fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$AUC_train,digits = 4)))+
+            text(x = 0.8,y = 0.12, paste("AUC_train =",round(AUC,digits = 4)))+
             points(df_roc_test$FPR, df_roc_test$TPR, type="b", xlim=c(0,1), ylim=c(0,1), lwd=2,
                    xlab= "FRP",ylab="TPR")+
             lines(df_roc_test$FPR, df_roc_test$TPR)+
             abline(0,1, col="red", lty=2)+
-            text(x = 0.8,y = 0.22, paste("AUC_test =",round(fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$AUC_test,digits = 4)))
+            text(x = 0.8,y = 0.22, paste("AUC_test =",round(AUC_test,digits = 4)))
           legend('topleft',
                  legend=c("Test", "Train"),
                  col=c("black","gray"), lty=c(2,1),
