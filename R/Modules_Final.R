@@ -136,8 +136,8 @@ import_data_server<- function(input,
   data_re<-reactiveValues(
     id = c(),
     date = c(),
-    event = c()
-
+    event = c(),
+    complete = FALSE
   )
 
   ns <- session$ns
@@ -250,292 +250,168 @@ import_data_server<- function(input,
           )
         ),
 
-        fluidRow(
-          column(4,
-                 actionButton(ns("reload"), label= "Reset"),
-                 actionButton(ns("save"), label= "Save")
-                 # actionBttn(
-                 #   inputId = ns("reload"),
-                 #   label = NULL,
-                 #   style = "minimal",
-                 #   color = "primary",
-                 #   icon = icon("rotate-left")
-                 # ),
-                 # actionBttn(
-                 #   inputId = ns("save"),
-                 #   label = "SAVE",
-                 #   style = "minimal",
-                 #   color = "primary"
-                 # )
-                 # actionButton(ns("reload"),"RELOAD"),
-                 # actionButton(ns("save_col"),"SAVE")
-          ),
-          # column(3,
-          #        actionButton(ns("save_col"),"SAVE")
-          # )
-        ),
+
       fluidRow(
         tags$hr()
       )
 
-
-
-      # fluidRow(
-      #   bucket_list(
-      #     header = "",
-      #     group_name = "col_names",
-      #     orientation = "horizontal",
-      #     add_rank_list(
-      #       text = "Event Log var names",
-      #       labels = colnames(myData()),
-      #       input_id = "colnames"
-      #     ),
-      #     add_rank_list(
-      #       text = "ID",
-      #       labels = NULL,
-      #       input_id = ns("id")
-      #     ),
-      #     add_rank_list(
-      #       text = "DATE",
-      #       labels = NULL,
-      #       input_id = ns("data_ini")
-      #     ),
-      #     add_rank_list(
-      #       text = "EVENT",
-      #       labels = NULL,
-      #       input_id = ns("event")
-      #     ),
-      #
-      #   )
-      # )
     )
   })
 
 
-  observeEvent(input$reload,{
-    data_re$id<-c()
-    data_re$data<-c()
-    data_re$event<-c()
-    updatePickerInput(
-      session = session,
-      inputId ="event",
-      label = "EVENT",
-      choices = colnames(myData()),
-      options = list(
-        title = "select Event")
-    )
-    updatePickerInput(
-      session = session,
-      inputId ="ID",
-      label = "ID",
-      choices = colnames(myData()),
-      options = list(
-        title = "select ID")
-    )
-    updatePickerInput(
-      session = session,
-      inputId ="date",
-      label = "DATE",
-      choices = colnames(myData())[!colnames(myData()) %in% c(data_re$date, data_re$id)],
-      options = list(
-        title = "select DATE")
-    )
 
 
-  })
 
-
-  observeEvent(input$save,{
-    if(data_re$id=="" || data_re$date=="" ||data_re$event==""  ){
-      sendSweetAlert(
-        session = session,
-        title = "Error in: Variable Mapping",
-        text = "Please enter all fiels",
-        type = "primary"
-      )
-    }else{
-      id.ind<-which(colnames(myData())==data_re$id)
-      date.ind<-which(colnames(myData())==data_re$date)
-      event.ind<-which(colnames(myData())==data_re$event)
-
-      colnames(all.data[[1]])[id.ind]<<-"ID"
-      colnames(all.data[[1]])[date.ind]<<-"DATE_INI"
-      colnames(all.data[[1]])[event.ind]<<-"EVENT"
-    }
-
-
-  })
 
  ######################################################### OBSERVE ID ########################################################
+  # observeEvent(input$ID,{
+  #   data_re$id<-input$ID
+  #   if(data_re$id=="" || is.null(data_re$id) || (data_re$id %in% c(data_re$event,data_re$date))){
+  #     # sendSweetAlert(
+  #     #   session = session,
+  #     #   title = "Error in: Variable Mapping",
+  #     #   text = "Please enter all fiels",
+  #     #   type = "primary"
+  #     # )
+  #   }else{
+  #     id.ind<-which(colnames(myData())==data_re$id)
+  #     # date.ind<-which(colnames(myData())==data_re$date)
+  #     # event.ind<-which(colnames(myData())==data_re$event)
+  #
+  #     colnames(all.data[[1]])[id.ind]<<-"ID"
+  #     # colnames(all.data[[1]])[date.ind]<<-"DATE_INI"
+  #     # colnames(all.data[[1]])[event.ind]<<-"EVENT"
+  #     # data_re$complete<-TRUE
+  #
+  #     if(length(which(colnames(all.data[[1]]) %in% c("ID","DATE_INI","EVENT")))==3){
+  #       data_re$complete<-TRUE
+  #     }else{
+  #       data_re$complete<-FALSE
+  #     }
+  #   }
+  #
+  #
+  #
+  #
+  #
+  # })
+
+
   observeEvent(input$ID,{
+    data_re$id<-input$ID
+   })
 
-    if(!is.null(input$file)){
-      data_re$id<-input$ID
-
-      if(is.null(data_re$event) || data_re$event==""){
-        updatePickerInput(
-          session = session,
-          inputId ="event",
-          label = "EVENT",
-          choices = colnames(myData())[!colnames(myData()) %in% c(data_re$date, data_re$id)],
-          options = list(
-            title = "select Event")
-        )
-      }
-
-      if(is.null(data_re$date) || data_re$date=="" ){
-        updatePickerInput(
-          session = session,
-          inputId ="date",
-          label = "DATE",
-          choices = colnames(myData())[!colnames(myData()) %in% c(data_re$id, data_re$event)],
-          options = list(
-            title = "select Date")
-        )
-      }
-    }
-  })
-
-  ######################################################### OBSERVE DATA ########################################################
   observeEvent(input$date,{
     data_re$date<-input$date
-    if(data_re$date== ""){
 
+    if(data_re$date=="" || is.null(data_re$date) || (data_re$date %in% c(data_re$id,data_re$event)) ){
       rv.showswich$show.showswich <- FALSE
     }else{
       rv.showswich$show.showswich <- TRUE
     }
+  })
 
+  observeEvent(input$event,{
+    data_re$event<-input$event
+  })
 
-    if(!is.null(input$file)){
-      # print(colnames(myData()))
-      #
-      # ind<-which(colnames(myData())==input$date)
-      # if(!is.null(input$date) & identical(ind,integer(0))){
-      #   print("aaaaa")
-      # }
-      # colnames(all.data[[1]])[ind]<<-"DATE_INI"
-      # print(ind)
+  observe({
+    if(!(is.null(input$ID) || input$ID=="") & !(is.null(input$date) || input$date=="") & !(is.null(input$event) || input$event=="")){
 
-      if(is.null(data_re$event) || data_re$event==""){
-        updatePickerInput(
-          session = session,
-          inputId ="event",
-          label = "EVENT",
-          choices = colnames(myData())[!colnames(myData()) %in% c(data_re$date, data_re$id)],
-          options = list(
-            title = "select Event")
-        )
-      }
-      else if(input$event==data_re$date){
-        updatePickerInput(
-          session = session,
-          inputId ="date",
-          label = "DATE",
-          choices = colnames(myData())[!colnames(myData()) %in% c(data_re$id, data_re$date)],
-          options = list(
-            title = "select Date")
-        )
-      }
+      data_re$complete<-TRUE
+    }else{
 
-      if(is.null(data_re$id)|| data_re$id==""){
-        updatePickerInput(
-          session = session,
-          inputId ="ID",
-          label = "ID",
-          choices = colnames(myData())[!colnames(myData()) %in% c(data_re$date, data_re$event)],
-          options = list(
-            title = "select ID")
-        )
-      }
+      data_re$complete<-FALSE
     }
   })
+
+  ######################################################### OBSERVE DATA ########################################################
+  # observeEvent(input$date,{
+  #   data_re$date<-input$date
+  #   # if(data_re$date== ""){
+  #   #
+  #   #   rv.showswich$show.showswich <- FALSE
+  #   # }else{
+  #   #   rv.showswich$show.showswich <- TRUE
+  #   #
+  #   # }
+  #
+  #   if(data_re$date=="" || is.null(data_re$date) || (data_re$date %in% c(data_re$id,data_re$event)) ){
+  #     rv.showswich$show.showswich <- FALSE
+  #
+  #   }else{
+  #     rv.showswich$show.showswich <- TRUE
+  #
+  #      date.ind<-which(colnames(myData())==data_re$date)
+  #
+  #
+  #
+  #     colnames(all.data[[1]])[date.ind]<<-"DATE_INI"
+  #
+  #     if(length(which(colnames(all.data[[1]]) %in% c("ID","DATE_INI","EVENT")))==3){
+  #       data_re$complete<-TRUE
+  #     }else{
+  #       data_re$complete<-FALSE
+  #     }
+  #
+  #   }
+  #
+  #
+  #
+  # })
 
 
   ######################################################### OBSERVE EVENT ########################################################
-  observeEvent(input$event,{
-    data_re$event<-input$event
-
-    if(!is.null(input$file)){
-
-
-      if(is.null(data_re$date)|| data_re$date==""){
-        updatePickerInput(
-          session = session,
-          inputId ="date",
-          label = "DATE",
-          choices = colnames(myData())[!colnames(myData()) %in% c(data_re$id, data_re$event)],
-          options = list(
-            title = "select Date")
-        )
-      }
-
-
-      if(is.null(data_re$id)|| data_re$id==""){
-        updatePickerInput(
-          session = session,
-          inputId ="ID",
-          label = "ID",
-          choices = colnames(myData())[!colnames(myData()) %in% c(data_re$date, data_re$event)],
-          options = list(
-            title = "select ID")
-        )
-      }
-    }
-  })
-
-
-
-
-
-  # observeEvent(input$id,{
-  #   if(!is.null(input$file)){
-  #     ind<-which(colnames(all.data[[1]])==input$id[1])
-  #     if(!is.null(input$id) & identical(ind,integer(0))){
-  #       print(colnames(myData()))
-  #
-  #       colnames(all.data[[1]])<<-colnames(myData())
-  #
-  #     }
-  #
-  #     colnames(all.data[[1]])[which(colnames(all.data[[1]])==input$id[1])]<<-"ID"
-  #     print(colnames(myData()))
-  #
-  #   }
-  #
-  # })
-  #
-  # observeEvent(input$data_ini,{
-  #   if(!is.null(input$file)){
-  #     ind<-which(colnames(all.data[[1]])==input$data_ini[1])
-  #     if(!is.null(input$data_ini) & identical(ind,integer(0))){
-  #       colnames(all.data[[1]])<<-colnames(myData())
-  #
-  #       print(colnames(myData()))
-  #
-  #     }
-  #
-  #     colnames(all.data[[1]])[which(colnames(all.data[[1]])==input$data_ini[1])]<<-"DATE_INI"
-  #
-  #
-  #     print( colnames(all.data[[1]]))
-  #     rv.showswich$show.showswich <- !(rv.showswich$show.showswich)
-  #
-  #   }
-  # })
-  #
   # observeEvent(input$event,{
-  #   if(!is.null(input$file)){
-  #     ind<-which(colnames(all.data[[1]])==input$event[1])
-  #     if(!is.null(input$event) & identical(ind,integer(0))){
-  #       colnames(all.data[[1]])<<-colnames(myData())
-  #     }
-  #     colnames(all.data[[1]])[which(colnames(all.data[[1]])==input$event[1])]<<-"EVENT"
-  #     print(colnames(all.data[[1]]))
+  #   data_re$event<-input$event
+  #   if(data_re$event=="" || is.null(data_re$event) || (data_re$event %in% c(data_re$id,data_re$date))){
   #
-  #   # colnames(all.data[[1]])[which(colnames(all.data[[1]])==input$event[1])]<<-"EVENT"
+  #
+  #   }else{
+  #
+  #     date.event<-which(colnames(myData())==data_re$event)
+  #     colnames(all.data[[1]])[date.event]<<-"EVENT"
+  #     if(length(which(colnames(all.data[[1]]) %in% c("ID","DATE_INI","EVENT")))==3){
+  #       data_re$complete<-TRUE
+  #     }else{
+  #       data_re$complete<-FALSE
+  #     }
+  #
   #   }
+  #
+  #   # if(!is.null(input$file)){
+  #   #
+  #   #
+  #   #   if(is.null(data_re$date)|| data_re$date==""){
+  #   #     updatePickerInput(
+  #   #       session = session,
+  #   #       inputId ="date",
+  #   #       label = "DATE",
+  #   #       choices = colnames(myData())[!colnames(myData()) %in% c(data_re$id, data_re$event)],
+  #   #       options = list(
+  #   #         title = "select Date")
+  #   #     )
+  #   #   }
+  #   #
+  #   #
+  #   #   if(is.null(data_re$id)|| data_re$id==""){
+  #   #     updatePickerInput(
+  #   #       session = session,
+  #   #       inputId ="ID",
+  #   #       label = "ID",
+  #   #       choices = colnames(myData())[!colnames(myData()) %in% c(data_re$date, data_re$event)],
+  #   #       options = list(
+  #   #         title = "select ID")
+  #   #     )
+  #   #   }
+  #   # }
   # })
+
+
+
+
+
+
 
 
   #############################    CONDITION SWITCH    #################################
@@ -822,6 +698,8 @@ import_data_server<- function(input,
       }
     }
   })
+
+  return(data_re)
 
 
 

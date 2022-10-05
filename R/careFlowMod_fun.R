@@ -4,6 +4,7 @@
 #'@import dplyr
 #'@import shinyWidgets
 #'@import DT
+#'@import shinyjs
 #'@export
 
 
@@ -18,7 +19,7 @@ careFlow.mod<-function(){
                         titlePanel("EventLog Uploading"),
                         br(),
                         import_mod_ui("uploadEL","Upload EventLog file",FALSE,col_setting=TRUE),
-                        # uiOutput("colDef"),
+                        shinyjs::useShinyjs(),
                         actionButton("loadEL","Load Event Log",width = '32%') ,
 
                )

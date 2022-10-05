@@ -14,6 +14,12 @@ render.km.graph<-function(list.path,path.plot){
     # if(!is.null(all.path[[name]])){
       pat<-all.path[[name]]
 
+      if(pat$time_inf){
+        max_time<-Inf
+      }else{
+        max_time<-pat$max_time
+      }
+
       out.fun<-KM_CFM(ObjCFM = ObjCFM,id.start = pat$id.start,
                       id.end = pat$id.end,
                       cens.leaf = pat$cens.leaf,
@@ -21,7 +27,7 @@ render.km.graph<-function(list.path,path.plot){
                       ObjDL = ObjDL,
                       UM = pat$um.time,
                       min_time = pat$min_time,
-                      max_time = pat$max_time)
+                      max_time = max_time)
 
       if(!is.null(out.fun)){
         out.fun<-cbind(out.fun$data.surv, path= name)

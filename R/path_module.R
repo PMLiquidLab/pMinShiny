@@ -119,7 +119,7 @@ path_mod_ui<- function(id, tit,
                inputId = ns("inf"),
                label = "set max time",
                status = "default",
-               right = TRUE)
+               right = TRUE,value = TRUE)
 
       )
     ),
@@ -219,12 +219,12 @@ path_mod_ui<- function(id, tit,
         )
 
 
-    ),
-    fluidRow(
-      column(12,
-             actionButton(ns("save"),label = "Save settings")
-             )
     )
+    # fluidRow(
+    #   column(12,
+    #          actionButton(ns("save"),label = "Save settings")
+    #          )
+    # )
   )
 
 
@@ -243,6 +243,31 @@ path_data_server<- function(input,
 
 
   ns <- session$ns
+
+
+
+
+
+    toListen <- reactive({
+      list("id.start"   = input$id.start,
+               "id.end"     = input$id.end,
+               "id.cens"    = input$id.cens,
+               "cens.leaf"  = input$cens.leaf,
+               "min_time"   = input$min_time,
+               "time_inf"   = input$inf,
+               "max_time"   = input$max_time,
+               "um.time"    = input$um.time,
+               "event.between"= input$event.between,
+               "event.NOT.between"= input$event.NOT.between,
+               "strat.var"  = input$strat.var,
+               "strat.var.type" = input$strat.var.type,
+               "strat.value1" = input$strat.value1,
+               "strat.value2" = input$strat.value2)
+    })
+
+
+
+
 
   observeEvent(input$strat.var,{
     if(input$strat.var!=""){
@@ -318,60 +343,76 @@ path_data_server<- function(input,
     }
   })
 
-  observeEvent(input$save,{
 
-  if(input$inf){
-    max_time<-Inf
-  }else{
-    max_time<-input$max_time
-  }
+  observeEvent(toListen(), {
+
+    lst.input<-toListen()
+
+    if(lst.input$time_inf){
+      max_time<-Inf
+    }else{
+      max_time<-input$max_time
+    }
     path.name<-substr(ns(""),1,(nchar(ns(""))-1))
 
+    all.path[[path.name]]<<-lst.input
 
 
+  },ignoreInit = TRUE)
 
 
-  all.path[[path.name]]<<-list("id.start"   = input$id.start,
-                                      "id.end"     = input$id.end,
-                                      "id.cens"    = input$id.cens,
-                                      "cens.leaf"  = input$cens.leaf,
-                                      "min_time"   = input$min_time,
-                                      "max_time"   = max_time,
-                                      "um.time"    = input$um.time,
-                                      "strat.var"  = input$strat.var,
-                                      "strat.var.type" = input$strat.var.type,
-                                      "strat.value1" = input$strat.value1,
-                                      "strat.value2" = input$strat.value2
-                                      )
-  if(is.fomm){
-    all.path[[paste0("path",id)]]["event.between"]<<-c(input$event.between)
-    all.path[[paste0("path",id)]]["event.NOT.between"]<<-c(input$event.NOT.between)
-  }
-
-  })
+  # observeEvent(input$save,{
+  #
+  # if(input$inf){
+  #   max_time<-Inf
+  # }else{
+  #   max_time<-input$max_time
+  # }
+  #   path.name<-substr(ns(""),1,(nchar(ns(""))-1))
+  #
+  #
+  #
+  #
+  #
+  # all.path[[path.name]]<<-list("id.start"   = input$id.start,
+  #                                     "id.end"     = input$id.end,
+  #                                     "id.cens"    = input$id.cens,
+  #                                     "cens.leaf"  = input$cens.leaf,
+  #                                     "min_time"   = input$min_time,
+  #                                     "max_time"   = max_time,
+  #                                     "um.time"    = input$um.time,
+  #                                     "strat.var"  = input$strat.var,
+  #                                     "strat.var.type" = input$strat.var.type,
+  #                                     "strat.value1" = input$strat.value1,
+  #                                     "strat.value2" = input$strat.value2
+  #                                     )
+  # if(is.fomm){
+  #   if(is.null(input$event.between)){
+  #     event.bet<-""
+  #   }else{
+  #     event.bet<-input$event.between
+  #   }
+  #
+  #   if(is.null(input$event.NOT.between)){
+  #     event.NOT.bet<-""
+  #   }else{
+  #     event.NOT.bet<-input$event.NOT.between
+  #   }
+  #
+  #   all.path[[paste0("path",id)]]["event.between"]<<-c(event.bet)
+  #   all.path[[paste0("path",id)]]["event.NOT.between"]<<-c(event.NOT.bet)
+  #
+  #
+  #   # all.path[[paste0("path",id)]]["event.between"]<<-c(input$event.between)
+  #   # all.path[[paste0("path",id)]]["event.NOT.between"]<<-c(input$event.NOT.between)
+  # }
+  #
+  # })
 
 }
 
 
-# ui <- fluidPage(
-#   sidebarLayout(
-#     sidebarPanel(
-# width = 4,
-# tabsetPanel(
-#   tabPanel(
-#     path_mod_ui("path",tit = "path 1",node.list=s$lst.nodi,is.strat.var = TRUE,is.fomm = TRUE,el.data = all.data[[1]])
-#   )
-# )
-#     ),
-#     mainPanel()
-#     )
-# )
-#
-# server <- function(input, output, session) {
-#   tab<-callModule(path_data_server,"path")
-# }
-#
-# shinyApp(ui, server)
+
 
 
 

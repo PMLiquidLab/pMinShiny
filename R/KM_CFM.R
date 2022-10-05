@@ -81,6 +81,7 @@ KM_CFM<-function(ObjCFM,
     #controllo che nodo end sia nel sottoalbero che inizia con nodo start
     check.flag<-c()
 
+
     for (i in c(1:length(id.end))) {
       check<-which(s$lst.nodi[[as.character(id.start)]]$IPP %in% s$lst.nodi[[as.character(id.end[i])]]$IPP)
       check.flag[i]<-identical(check, integer(0))
@@ -252,9 +253,15 @@ KM_CFM<-function(ObjCFM,
       #filtro sul tempo massimo di osservazione
       deltamax<-max_time-min_time
       matrice.KM<-matrice.KM[matrice.KM$time<=deltamax,]
-      km.model<-survfit(Surv(time, outcome)~1,   data=matrice.KM)
-      to_ret<-list("KM"=km.model,
-                   "data.surv"= matrice.KM)
+      if(nrow(matrice.KM)==0){
+        to_ret<-NULL
+      }else{
+        km.model<-survfit(Surv(time, outcome)~1,   data=matrice.KM)
+        to_ret<-list("KM"=km.model,
+                     "data.surv"= matrice.KM)
+      }
+
+
 
 
 

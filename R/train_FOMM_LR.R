@@ -10,6 +10,7 @@
 #       arr.attributi   --> variabili dipendenti
 #       ID.test         --> ID paz test  set
 #       ID.train        --> ID paz train set
+# AGGIUNGERE PARAMETRO PER SCELTA ALGORITMO
 
 train.FOMM.LR <- function( df_train,
                            df_test,
@@ -18,13 +19,12 @@ train.FOMM.LR <- function( df_train,
                            perf.train = TRUE) {
 
 
-
-  # df_train <-df_tot[which(df_tot$ID %in% arr.ID.train),]
-  # df_test  <-df_tot[which(df_tot$ID %in% arr.ID.test),]
-
-
   ######################################   TRAIN DEL MODELLO   #########################################################
   df_train_tmp<-df_train[,2:ncol(df_train)]
+  # switch (cheosen.alg,
+  #   "LR" = {glm.fit<-glm( y ~ ., data=df_train_tmp, family= binomial(link = "logit"))}
+  #
+  # )
   glm.fit<-glm( y ~ ., data=df_train_tmp, family= binomial(link = "logit"))
 
 

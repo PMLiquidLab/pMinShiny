@@ -3,7 +3,7 @@
 #'
 #'@import pMineR
 #'@import survival
-#'
+
 
 #===========================================================
 # KaplanMeier

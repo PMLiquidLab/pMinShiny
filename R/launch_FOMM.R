@@ -4,6 +4,7 @@
 #'@import dplyr
 #'@import shinyWidgets
 #'@import DT
+#'@import shinyjs
 #'@export
 
 
@@ -20,6 +21,7 @@ FOMM.mod<-function(){
                         titlePanel("EventLog Uploading"),
                         br(),
                         import_mod_ui("uploadEL","Upload EventLog file",FALSE,col_setting=TRUE),
+                        shinyjs::useShinyjs(),
                         actionButton("loadEL","Load Event Log",width = '32%') ,
 
                )

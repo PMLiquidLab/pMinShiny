@@ -11,5 +11,5 @@ Description: A Graphical User Interface for pMineR
 License: GPL
 Encoding: UTF-8
 LazyData: true
-Imports: shiny, dplyr, pMineR, lubridate, UpSetR, rlang, shinyWidgets, DT, shinybusy, dbplyr, XML, cluster, data.table, ggplot2, kableExtra, shinyjqui, DiagrammeR, shinythemes, sortable, shinydashboard, timevis, survival, survminer, utils, graphics, stats
+Imports: shiny, dplyr, pMineR, lubridate, UpSetR, rlang, shinyWidgets, DT, shinybusy, dbplyr, XML, cluster, data.table, ggplot2, kableExtra, shinyjqui, DiagrammeR, shinythemes, sortable, shinydashboard, timevis, survival, survminer, utils, graphics, stats, shinyjs
 RoxygenNote: 7.1.2

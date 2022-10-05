@@ -128,10 +128,10 @@ import_mod_ui_visual<- function(id, tit,flag,col_setting=FALSE){
 
 
 import_data_server_visual<- function(input,
-                              output,
-                              session,
-                              name,
-                              flag= FALSE){
+                                     output,
+                                     session,
+                                     name,
+                                     flag= FALSE){
 
   options(shiny.maxRequestSize=50*1024^2)
 
@@ -256,7 +256,7 @@ import_data_server_visual<- function(input,
       fluidRow(
         column(12,
                br()
-               )
+        )
       ),
 
       fluidRow(
@@ -266,7 +266,7 @@ import_data_server_visual<- function(input,
                                         "Not Punctual Event"),
                             selected = "Punctual Event"),
 
-               ),
+        ),
         column(4,
 
                conditionalPanel("output.end_typ== 'yes'", ns=ns,
@@ -278,7 +278,7 @@ import_data_server_visual<- function(input,
                                   options = list(
                                     title = "select DATE_END")
                                 )
-                                )
+               )
 
 
                # pickerInput(
@@ -289,7 +289,7 @@ import_data_server_visual<- function(input,
                #   options = list(
                #     title = "select DATE_END")
                # )
-               )
+        )
 
       ),
 
@@ -972,29 +972,3 @@ import_data_server_visual<- function(input,
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
