@@ -4,7 +4,7 @@
 
 ```
 library("remotes")
-remotes::install_github("mariagrazialorusso/pMinShiny")
+remotes::install_github("PMLiquidLab/pMinShiny")
 ```
 
 Let's start by loading the library 
@@ -22,6 +22,7 @@ At this point you will be able to view  the modules by running the following ins
 ```
 visual.mod()
 careFlow.mod()
+FOMM.mod()
 
 ```
 <br>
