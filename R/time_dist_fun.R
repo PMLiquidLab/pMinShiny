@@ -76,14 +76,19 @@ time_dist<-function(data,chosen,date_range){
               "#FFDD25",
               "#999999")
 
+  if(is.null(chosen)){
+    chosen=""
+  }
 
-  date_var<-as.Date(select(data,2)[,1])
+
+  date_var<-as.Date(select(data,"DATE_INI")[,1])
   # date_var<-date_var[date_var<=date_range[2] & date_var>date_range[1]]
   # date_var<-as.factor(quarter(date_var,with_year = TRUE, fiscal_start = 1))
-  events<-as.factor(select(data,4)[,1])
+  events<-as.factor(select(data,"EVENT")[,1])
   new_data<-data.frame(date_var,events)
   # new_data<-subset(new_data, events %in% chosen)
-  final_data<-filter(new_data, (date_var<=date_range[2] & date_var>date_range[1]) & events %in% chosen)
+  final_data<-new_data[which((new_data$date_var<=date_range[2] & new_data$date_var>date_range[1]) & events %in% chosen),]
+  # final_data<-filter(new_data, (date_var<=date_range[2] & date_var>date_range[1]) & events %in% chosen)
   final_data$date_var<-as.factor(quarter(final_data$date_var,with_year = TRUE, fiscal_start = 1))
 
   groups<-final_data %>% group_by(date_var,events)

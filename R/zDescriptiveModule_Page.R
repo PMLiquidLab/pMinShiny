@@ -118,6 +118,7 @@ server.descr<-function(input,output,session){
     }else{
       data_reactive$EventLog <- df[, c("ID","DATE_INI","DATE_END","EVENT")]
       if(is.factor(data_reactive$EventLog$EVENT)) { data_reactive$EventLog$EVENT <- as.character(data_reactive$EventLog$EVENT)  }
+      data_reactive$event_delete<-unique(data_reactive$EventLog$EVENT)
 
       objDL.new <<- dataLoader(verbose.mode = FALSE)
       objDL.new$load.data.frame(mydata =data_reactive$EventLog ,IDName = "ID",EVENTName = "EVENT",dateColumnName = "DATE_INI",
@@ -146,8 +147,8 @@ server.descr<-function(input,output,session){
                                     sidebarPanel(
                                       p(h4(strong("Select variable to plot"))),
                                       awesomeCheckboxGroup("eventList","",
-                                                           choices = unique(data_reactive$EventLog[,4]),
-                                                           selected =unique(data_reactive$EventLog[,4]),
+                                                           choices = unique(data_reactive$EventLog[,"EVENT"]),
+                                                           selected =unique(data_reactive$EventLog[,"EVENT"]),
                                                            status = "#primary"
                                       )
                                     ),
@@ -231,9 +232,9 @@ server.descr<-function(input,output,session){
                                                             sliderInput(
                                                               "date.range",
                                                               "Select Data Range:",
-                                                              min = min(as.Date(data_reactive$EventLog[,2])),
-                                                              max = max(as.Date(data_reactive$EventLog[,2])),
-                                                              value=c(min(as.Date(data_reactive$EventLog[,2])),max(as.Date(data_reactive$EventLog[,2]))),
+                                                              min = min(as.Date(data_reactive$EventLog[,"DATE_INI"])),
+                                                              max = max(as.Date(data_reactive$EventLog[,"DATE_INI"])),
+                                                              value=c(min(as.Date(data_reactive$EventLog[,"DATE_INI"])),max(as.Date(data_reactive$EventLog[,"DATE_INI"]))),
                                                               timeFormat="%Y-%m-%d"),
 
 
