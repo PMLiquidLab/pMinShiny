@@ -440,19 +440,25 @@ server.descr<-function(input,output,session){
                                                            multiple = TRUE)
                                                )
                                       ),
+                                      # fluidRow(
+                                      #   tags$hr(),
+                                      #   materialSwitch(
+                                      #     inputId = "more.graph",
+                                      #     label = "show more graph",
+                                      #     status = "primary",
+                                      #     right = TRUE
+                                      #   )
+                                      # ),
                                       fluidRow(
-                                        tags$hr(),
-                                        materialSwitch(
-                                          inputId = "more.graph",
-                                          label = "show more graph",
-                                          status = "primary",
-                                          right = TRUE
-                                        )
-                                      ),
-                                      conditionalPanel("output.moregr== 'yes' ",
-                                                       selectInput("id","Select paz or a group of paz",
-                                                                   choices = NULL, multiple = TRUE)
-                                                       )
+                                        selectizeInput(inputId = "id","Select paz or a group of paz",
+                                                       choices = NULL, multiple = TRUE)
+                                      )
+                                      # conditionalPanel("output.moregr== 'yes' ",
+                                      #                  selectizeInput(inputId = "id","Select paz or a group of paz",
+                                      #                                 choices = NULL, multiple = TRUE)
+                                      #                  # selectInput("id","Select paz or a group of paz",
+                                      #                  #             choices = NULL, multiple = TRUE)
+                                      #                  )
                                     ),
                                     mainPanel(
                                       tabsetPanel(
@@ -488,11 +494,13 @@ server.descr<-function(input,output,session){
                                                             tooltip = tooltipOptions(title = "Click to more info"))
                                                           )
                                                  ),
-                                                 conditionalPanel("output.moregr=='yes",
-                                                                  fluidRow(
-                                                                    timevis::timevisOutput("timeVis.timeline")
-                                                                  )
-                                                                  )
+                                                 uiOutput("more.graph.ui")
+                                                 # conditionalPanel("output.moregr",
+                                                 #                  # fluidRow(
+                                                 #                  #   timevis::timevisOutput("timeVis.timeline")
+                                                 #                  # )
+                                                 #                  uiOutput("more.graph.ui")
+                                                 #                  )
 
                                               )
                                         )
@@ -508,26 +516,43 @@ server.descr<-function(input,output,session){
 
   })
 
-  rv.moregr <- reactiveValues(show.moregr = FALSE)
+  # rv.moregr <- reactiveValues(show.moregr = FALSE)
+  #
+  # observeEvent(input$more.graph, ({
+  #   rv.moregr$show.moregr <- !(rv.moregr$show.moregr)
+  # }))
+  #
+  # output$moregr <- renderText({
+  #   if(!rv.moregr$show.moregr){
+  #     "yes"
+  #   } else{
+  #     "no"
+  #   }
+  # })
+  #
+  # outputOptions(output, "moregr", suspendWhenHidden = FALSE)
 
-  observeEvent(input$more.graph, ({
-    rv.moregr$show.moregr <- !(rv.moregr$show.moregr)
-  }))
-
-  output$moregr <- renderText({
-    if(!rv.moregr$show.moregr){
-      "yes"
-    } else{
-      "no"
-    }
+  output$more.graph.ui<-renderUI({
+    fluidRow(
+      timevis::timevisOutput("timeVis.timeline")
+    )
   })
 
-  outputOptions(output, "moregr", suspendWhenHidden = FALSE)
 
-  observeEvent(input$more.graph,{
-    shiny::updateSelectInput(inputId = "id",label = "Select paz or a group of paz",
-                      choices = matrix_taceid()[,1])
-  })
+
+  observeEvent(list(input$event.start,
+                    input$event.end,
+                    input$time.b,
+                    input$time.a,
+                    input$inf,
+                    input$um.time,
+                    input$event.between,
+                    input$event.NOT.between),{
+    shiny::updateSelectizeInput(inputId = "id",label = "Select paz or a group of paz",
+                      choices = matrix_taceid()[,1],selected =  "NA")
+  },ignoreInit = T)
+
+
 
 
   observeEvent(input$event.start,{
@@ -545,6 +570,7 @@ server.descr<-function(input,output,session){
                                                      !unique(data_reactive$EventLog[,4]) %in% data_reactive$ev.end]
     )
 
+
   })
 
   observeEvent(input$event.end,{
@@ -556,6 +582,7 @@ server.descr<-function(input,output,session){
                                                      !unique(data_reactive$EventLog[,4]) %in% data_reactive$ev.start &
                                                      !unique(data_reactive$EventLog[,4]) %in% data_reactive$ev.end]
     )
+
   })
 
   observeEvent(input$event.between,{
@@ -567,6 +594,7 @@ server.descr<-function(input,output,session){
                                                    !unique(data_reactive$EventLog[,4]) %in% data_reactive$ev.start &
                                                    !unique(data_reactive$EventLog[,4]) %in% data_reactive$ev.end]
     )
+
 
   })
 

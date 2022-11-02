@@ -1596,9 +1596,12 @@ server.careFlow<-function(input,output,session){
 
      }else{
        thr.rule<-input$strat.rule
-       switch (input,
-         "median "= {strat.value <- median(as.numeric(data_reactive$EventLog[,input$strat.var]),na.rm = T)}
+
+       switch (input$strat.rule,
+         "median" = {strat.value <- median(as.numeric(data_reactive$EventLog[,input$strat.var]),na.rm = T)}
        )
+
+
 
 
        script<-ObjCFM$plotCFGraphComparison(stratifyFor = input$strat.var,
