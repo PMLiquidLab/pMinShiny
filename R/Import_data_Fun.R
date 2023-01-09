@@ -141,6 +141,7 @@ import_data_server<- function(input,
   )
 
   ns <- session$ns
+
   #creating variable Mydata which contains dataframe uploaded by fileInput
   myData <- reactive({
     if(flag){
@@ -156,11 +157,8 @@ import_data_server<- function(input,
                     sep = input$sep,
                     quote = input$quote)
       EventLog1<<-d
-      # colnames(d)<-input$col_names
-      # saveData(d,name)
       all.data[[name]]<<-d
     }
-
     d
   })
 
@@ -187,7 +185,6 @@ import_data_server<- function(input,
         myData()
       },
       error = function(e) {
-        # return a safeError if a parsing error occurs
         stop(safeError(e))
       })
   },
@@ -264,47 +261,14 @@ import_data_server<- function(input,
 
 
  ######################################################### OBSERVE ID ########################################################
-  # observeEvent(input$ID,{
-  #   data_re$id<-input$ID
-  #   if(data_re$id=="" || is.null(data_re$id) || (data_re$id %in% c(data_re$event,data_re$date))){
-  #     # sendSweetAlert(
-  #     #   session = session,
-  #     #   title = "Error in: Variable Mapping",
-  #     #   text = "Please enter all fiels",
-  #     #   type = "primary"
-  #     # )
-  #   }else{
-  #     id.ind<-which(colnames(myData())==data_re$id)
-  #     # date.ind<-which(colnames(myData())==data_re$date)
-  #     # event.ind<-which(colnames(myData())==data_re$event)
-  #
-  #     colnames(all.data[[1]])[id.ind]<<-"ID"
-  #     # colnames(all.data[[1]])[date.ind]<<-"DATE_INI"
-  #     # colnames(all.data[[1]])[event.ind]<<-"EVENT"
-  #     # data_re$complete<-TRUE
-  #
-  #     if(length(which(colnames(all.data[[1]]) %in% c("ID","DATE_INI","EVENT")))==3){
-  #       data_re$complete<-TRUE
-  #     }else{
-  #       data_re$complete<-FALSE
-  #     }
-  #   }
-  #
-  #
-  #
-  #
-  #
-  # })
-
-
   observeEvent(input$ID,{
     data_re$id<-input$ID
    })
 
   observeEvent(input$date,{
     data_re$date<-input$date
-
-    if(data_re$date=="" || is.null(data_re$date) || (data_re$date %in% c(data_re$id,data_re$event)) ){
+    #|| (data_re$date %in% c(data_re$id,data_re$event))
+    if(data_re$date=="" || is.null(data_re$date)){
       rv.showswich$show.showswich <- FALSE
     }else{
       rv.showswich$show.showswich <- TRUE
@@ -317,102 +281,11 @@ import_data_server<- function(input,
 
   observe({
     if(!(is.null(input$ID) || input$ID=="") & !(is.null(input$date) || input$date=="") & !(is.null(input$event) || input$event=="")){
-
       data_re$complete<-TRUE
     }else{
-
       data_re$complete<-FALSE
     }
   })
-
-  ######################################################### OBSERVE DATA ########################################################
-  # observeEvent(input$date,{
-  #   data_re$date<-input$date
-  #   # if(data_re$date== ""){
-  #   #
-  #   #   rv.showswich$show.showswich <- FALSE
-  #   # }else{
-  #   #   rv.showswich$show.showswich <- TRUE
-  #   #
-  #   # }
-  #
-  #   if(data_re$date=="" || is.null(data_re$date) || (data_re$date %in% c(data_re$id,data_re$event)) ){
-  #     rv.showswich$show.showswich <- FALSE
-  #
-  #   }else{
-  #     rv.showswich$show.showswich <- TRUE
-  #
-  #      date.ind<-which(colnames(myData())==data_re$date)
-  #
-  #
-  #
-  #     colnames(all.data[[1]])[date.ind]<<-"DATE_INI"
-  #
-  #     if(length(which(colnames(all.data[[1]]) %in% c("ID","DATE_INI","EVENT")))==3){
-  #       data_re$complete<-TRUE
-  #     }else{
-  #       data_re$complete<-FALSE
-  #     }
-  #
-  #   }
-  #
-  #
-  #
-  # })
-
-
-  ######################################################### OBSERVE EVENT ########################################################
-  # observeEvent(input$event,{
-  #   data_re$event<-input$event
-  #   if(data_re$event=="" || is.null(data_re$event) || (data_re$event %in% c(data_re$id,data_re$date))){
-  #
-  #
-  #   }else{
-  #
-  #     date.event<-which(colnames(myData())==data_re$event)
-  #     colnames(all.data[[1]])[date.event]<<-"EVENT"
-  #     if(length(which(colnames(all.data[[1]]) %in% c("ID","DATE_INI","EVENT")))==3){
-  #       data_re$complete<-TRUE
-  #     }else{
-  #       data_re$complete<-FALSE
-  #     }
-  #
-  #   }
-  #
-  #   # if(!is.null(input$file)){
-  #   #
-  #   #
-  #   #   if(is.null(data_re$date)|| data_re$date==""){
-  #   #     updatePickerInput(
-  #   #       session = session,
-  #   #       inputId ="date",
-  #   #       label = "DATE",
-  #   #       choices = colnames(myData())[!colnames(myData()) %in% c(data_re$id, data_re$event)],
-  #   #       options = list(
-  #   #         title = "select Date")
-  #   #     )
-  #   #   }
-  #   #
-  #   #
-  #   #   if(is.null(data_re$id)|| data_re$id==""){
-  #   #     updatePickerInput(
-  #   #       session = session,
-  #   #       inputId ="ID",
-  #   #       label = "ID",
-  #   #       choices = colnames(myData())[!colnames(myData()) %in% c(data_re$date, data_re$event)],
-  #   #       options = list(
-  #   #         title = "select ID")
-  #   #     )
-  #   #   }
-  #   # }
-  # })
-
-
-
-
-
-
-
 
   #############################    CONDITION SWITCH    #################################
   rv.showswich <- reactiveValues(show.showswich = FALSE)
@@ -676,8 +549,6 @@ import_data_server<- function(input,
   output$ex.date<-renderText(date()[1])
 
   observeEvent(input$save.date,{
-
-
     if(colnames(all.data[[1]])[which(colnames(myData())==data_re$date)]!="DATE_INI"){
       sendSweetAlert(
         session = session,

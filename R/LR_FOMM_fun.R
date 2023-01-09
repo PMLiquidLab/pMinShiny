@@ -58,6 +58,9 @@
 #FOMM.R
 
 
+
+
+
 LR_FOMM_fun<-function(eventStart,obj.out,eventGoal,arr.attributes, arr.ID.train,arr.ID.test,feature.selection=TRUE,k=1,p.train=0.7,
                       p.thr=0.05,n.att=2,n.digit.out=4,passing=c(),NOTpassing=c(),max.time=Inf,min.time=0,UM="days"){
 

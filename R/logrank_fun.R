@@ -7,17 +7,17 @@
 
 #out.fun<-output of render.km.graph
 
-logrank_fun<-function(out.fun){
+logrank_fun<-function(out.fun,lst.path){
   df.out<-data.frame()
   if(!is.null(out.fun$id.not.valid)){
 
-    not.to.check<-which(names(all.path) %in% paste0("path",out.fun$id.not.valid)==TRUE)
-    to.combine<-names(all.path)[-not.to.check]
+    not.to.check<-which(names(lst.path) %in% paste0("path",out.fun$id.not.valid)==TRUE)
+    to.combine<-names(lst.path)[-not.to.check]
   }else{
-    to.combine<-names(all.path)
+    to.combine<-names(lst.path)
   }
 
-  not.to.check<-which(names(all.path) %in% paste0("path",out.fun$id.not.valid)==TRUE)
+  not.to.check<-which(names(lst.path) %in% paste0("path",out.fun$id.not.valid)==TRUE)
 
 
   if(length(out.fun)==3 & length(to.combine)>1){
