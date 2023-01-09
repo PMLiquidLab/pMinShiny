@@ -42,22 +42,12 @@ server.FOMM<-function(input,output,session){
     date.ind<-which(colnames(all.data[[1]])==tab$date)
     event.ind<-which(colnames(all.data[[1]])==tab$event)
 
-    colnames(all.data[[1]])[id.ind]<<-"ID"
-    colnames(all.data[[1]])[date.ind]<<-"DATE_INI"
-    colnames(all.data[[1]])[event.ind]<<-"EVENT"
+
     data_reactive$EventLog <- all.data[["EventLog"]]
-    arr.attributi<-c()
-    for (i in c(1:length(colnames(data_reactive$EventLog)))) {
-      name<-colnames(data_reactive$EventLog)[i]
-      if(length(unique(data_reactive$EventLog[,name]))>20){
-        arr.attributi[i]<-colnames(data_reactive$EventLog)[i]
-      }
-    }
-    arr.attributi<-arr.attributi[-which(arr.attributi %in% c("ID","DATE_INI","EVENT",NA))]
-
-    data_reactive$numerical.att<-arr.attributi
 
 
+
+    tryCatch({
     if(is_empty(data_reactive$EventLog)){
       sendSweetAlert(
         session = session,
@@ -66,16 +56,17 @@ server.FOMM<-function(input,output,session){
         type = "primary"
       )
       data_reactive$EventLog<-data.frame()
-    }else if(length(which(colnames(all.data[[1]]) %in% c("ID","DATE_INI","EVENT")))<3){
+    }
+    else if ((id.ind == date.ind) ||
+             (id.ind == event.ind) || (date.ind == event.ind)) {
       sendSweetAlert(
         session = session,
         title = "Error",
-        text = "It is necessary to explicit which columns of the uploaded Event Log contain information about: ID, DATE and EVENT label ",
+        text = "Please check the mapping: column selected twice",
         type = "primary"
       )
-      data_reactive$EventLog<-data.frame()
-
-    }else if(is.na(as.Date(all.data[[1]]$DATE_INI[1], "%Y-%m-%d"))){
+      data_reactive$EventLog <- data.frame()
+    }else if(is.na(as.Date(all.data[[1]][, date.ind][1], "%Y-%m-%d"))){
       sendSweetAlert(
         session = session,
         title = "Error",
@@ -84,6 +75,20 @@ server.FOMM<-function(input,output,session){
       )
       data_reactive$EventLog<-data.frame()
     }else{
+      colnames(all.data[[1]])[id.ind]<<-"ID"
+      colnames(all.data[[1]])[date.ind]<<-"DATE_INI"
+      colnames(all.data[[1]])[event.ind]<<-"EVENT"
+      arr.attributi<-c()
+      for (i in c(1:length(colnames(data_reactive$EventLog)))) {
+        name<-colnames(data_reactive$EventLog)[i]
+        if(length(unique(data_reactive$EventLog[,name]))>20){
+          arr.attributi[i]<-colnames(data_reactive$EventLog)[i]
+        }
+      }
+      arr.attributi<-arr.attributi[-which(arr.attributi %in% c("ID","DATE_INI","EVENT",NA))]
+
+      data_reactive$numerical.att<-arr.attributi
+      data_reactive$EventLog <- all.data[["EventLog"]]
       # Creating Dl obj e CFM obj
 
       if(is.factor(data_reactive$EventLog$EVENT)) { data_reactive$EventLog$EVENT <- as.character(data_reactive$EventLog$EVENT)  }
@@ -659,6 +664,16 @@ server.FOMM<-function(input,output,session){
                 target = "Path Analysis",
                 position = "after"
       )}
+  },
+  error = function(e) {
+    sendSweetAlert(
+      session = session,
+      title = "Error",
+      text = "Please check the mapping: column selected as DATE seems to have no date format",
+      type = "primary"
+    )
+
+  })
 
     arr.ID.train<-sample(x = unique(all.data[[1]]$ID),size = 700)
     arr.ID.test<-unique(all.data[[1]]$ID)[-which(unique(all.data[[1]]$ID) %in% arr.ID.train)]
@@ -718,7 +733,7 @@ server.FOMM<-function(input,output,session){
       removeModal()
 
       data_reactive$fun.train.out<-fun.train.out$res
-      print(fun.train.out$run.check)
+
 
       output$show.train.result<-renderUI({
         fluidPage(
@@ -753,8 +768,7 @@ server.FOMM<-function(input,output,session){
 
     observeEvent(input$mat.att_rows_selected,{
     fun.train.out<-data_reactive$fun.train.out
-    print(input$mat.att_rows_selected[1])
-    print(fun.train.out$final.model[[input$mat.att_rows_selected[1]]])
+
     output$results<-renderUI({
       fluidPage(
         fluidRow(
