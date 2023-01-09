@@ -851,8 +851,32 @@ server.careFlow <- function(input, output, session) {
         is.fomm = FALSE
       )
 
+
+      paths.rm <- c()
+      for (nomi.path in names(all.path)) {
+        if (is.null(all.path[[nomi.path]][["id.end"]]))
+          paths.rm <- c(paths.rm, nomi.path)
+      }
+
+      if (length(paths.rm) ==1) {
+        all.path[[paths.rm]] <- NULL
+      }else if(length(paths.rm)>1){
+        for (i in c(1:length(paths.rm))) {
+          all.path[[paths.rm[i]]]<-NULL
+        }
+
+      }
+
       data_reactive$paths <- all.path
-      choices_list <- names(all.path)
+
+
+
+
+      choices_list <- names(data_reactive$paths)
+
+
+      # data_reactive$paths <- all.path
+      # choices_list <- names(all.path)
 
       # choices_list<-unlist(lapply(0:length(all.path)+1, function(path.num){ paste("path",path.num)}))
 
@@ -1187,8 +1211,13 @@ server.careFlow <- function(input, output, session) {
           paths.rm <- c(paths.rm, nomi.path)
       }
 
-      if (length(paths.rm) > 0) {
+      if (length(paths.rm) ==1) {
         all.path[[paths.rm]] <- NULL
+      }else if(length(paths.rm)>1){
+        for (i in c(1:length(paths.rm))) {
+          all.path[[paths.rm[i]]]<-NULL
+        }
+
       }
 
       data_reactive$paths <- all.path
