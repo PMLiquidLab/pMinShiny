@@ -10,14 +10,8 @@ render.km.graph.FOMM<-function(list.path,path.plot){
 
   for (i in c(1:length(list.path))) {
     name<-names(list.path)[i]
-    # name<-paste0("path",i)
-    # if(!is.null(all.path[[name]])){
     pat<-all.path[[name]]
 
-    # fromState, toState,ObjDL,
-    # passingThrough=c(), passingNotThrough=c(), stoppingAt=c(),
-    # stoppingNotAt=c(), PDVAt=c(), withPatientID=c() , UM="mins"
-    #
     out.fun<-KM_FOMM(fromState = pat$id.start,ObjDL = ObjDL,
                          toState = pat$id.end,
                          passingThrough = pat$event.between,
@@ -32,25 +26,6 @@ render.km.graph.FOMM<-function(list.path,path.plot){
     }else{
       id.not.valid<-c(id.not.valid,i)
     }
-
-
-
-
-    # out.fun<-KM_CFM(ObjCFM = ObjCFM,id.start = pat$id.start,
-    #                 id.end = pat$id.end,
-    #                 cens.leaf = pat$cens.leaf,
-    #                 id.cens = pat$id.cens,
-    #                 ObjDL = ObjDL,
-    #                 UM = pat$um.time,
-    #                 min_time = pat$min_time,
-    #                 max_time = pat$max_time)
-    #
-    # if(!is.null(out.fun)){
-    #   out.fun<-cbind(out.fun$data.surv, path= paste0("path",i))
-    #   df.surv<-rbind(df.surv,out.fun)
-    # }else{
-    #   id.not.valid<-c(id.not.valid,i)
-    # }
   }
 
   for (i in c(1:length(path.plot))) {

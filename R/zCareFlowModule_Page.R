@@ -868,19 +868,8 @@ server.careFlow <- function(input, output, session) {
       }
 
       data_reactive$paths <- all.path
-
-
-
-
+      data_reactive$paths.rm<-paths.rm
       choices_list <- names(data_reactive$paths)
-
-
-      # data_reactive$paths <- all.path
-      # choices_list <- names(all.path)
-
-      # choices_list<-unlist(lapply(0:length(all.path)+1, function(path.num){ paste("path",path.num)}))
-
-
 
 
       updateCheckboxGroupInput(
@@ -1221,10 +1210,7 @@ server.careFlow <- function(input, output, session) {
       }
 
       data_reactive$paths <- all.path
-
-
-
-
+      data_reactive$paths.rm<-paths.rm
       choices_list <- names(data_reactive$paths)
 
 
@@ -1244,7 +1230,7 @@ server.careFlow <- function(input, output, session) {
         sendSweetAlert(
           session = session,
           title = "Error",
-          text = "Every time you create a new path please save it using the proper button",
+          text = "At least one path must be entered",
           type = "primary"
         )
 
@@ -1254,17 +1240,27 @@ server.careFlow <- function(input, output, session) {
 
 
         output$error.mex <- renderText({
-          #caso in cui non ho trovato
-          if (length(fun.out) != 3) {
-            paste("please check values entered for path:", fun.out)
+          if (length(data_reactive$paths.rm) == 0) {
+            " "
 
-          } else if (!is.null(fun.out$id.not.valid)) {
-            paste("Path",
-                  fun.out$id.not.valid,
-                  "not shown: please check values entred")
           } else{
-            ""
+            paste("Path",
+                  data_reactive$paths.rm,
+                  "not shown: please check values entred")
           }
+
+
+          #caso in cui non ho trovato
+          # if (length(fun.out) != 3) {
+          #   paste("please check values entered for path:", fun.out)
+          #
+          # } else if (!is.null(fun.out$id.not.valid)) {
+          #   paste("Path",
+          #         fun.out$id.not.valid,
+          #         "not shown: please check values entred")
+          # } else{
+          #   ""
+          # }
         })
 
         output$km.curves <- renderPlot({

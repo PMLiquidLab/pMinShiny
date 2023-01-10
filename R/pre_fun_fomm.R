@@ -25,8 +25,6 @@ pre_fun_fomm<-function(ObjDL,
                        covariate.type ='attribute',
                        is.numerical=TRUE
                        # abs.threshold=NA,
-
-
                        # baseline da aggiungere quando inseriamo logica plot puntuale
 ){
 
