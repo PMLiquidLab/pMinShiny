@@ -1248,19 +1248,6 @@ server.careFlow <- function(input, output, session) {
                   data_reactive$paths.rm,
                   "not shown: please check values entred")
           }
-
-
-          #caso in cui non ho trovato
-          # if (length(fun.out) != 3) {
-          #   paste("please check values entered for path:", fun.out)
-          #
-          # } else if (!is.null(fun.out$id.not.valid)) {
-          #   paste("Path",
-          #         fun.out$id.not.valid,
-          #         "not shown: please check values entred")
-          # } else{
-          #   ""
-          # }
         })
 
         output$km.curves <- renderPlot({
@@ -1314,10 +1301,6 @@ server.careFlow <- function(input, output, session) {
                  FUN = c)
 
 
-
-        # arr.from<-do.call("cbind",do.call("rbind",all.path)[,1])
-        # lst.to<-do.call("rbind",all.path)[,2]
-
         #SERIE DI CONTROLLI CHE VANNO SISTEMATI:
         #sto assumendo che se length(unique(data_reactive$EventLog[,input$covariate]))<7 allora la cov che sto considerando è categorica
         if (is.null(arr.from) | is.null(lst.to[[1]])) {
@@ -1367,11 +1350,8 @@ server.careFlow <- function(input, output, session) {
           })
         }
       }
-
-
-
-
     })
+
 
 
 

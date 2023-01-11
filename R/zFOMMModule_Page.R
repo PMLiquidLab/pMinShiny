@@ -70,6 +70,7 @@ server.FOMM<-function(input,output,session){
       colnames(all.data[[1]])[id.ind]<<-"ID"
       colnames(all.data[[1]])[date.ind]<<-"DATE_INI"
       colnames(all.data[[1]])[event.ind]<<-"EVENT"
+      data_reactive$EventLog <- all.data[["EventLog"]]
       arr.attributi<-c()
       for (i in c(1:length(colnames(data_reactive$EventLog)))) {
         name <- colnames(data_reactive$EventLog)[i]
@@ -80,16 +81,25 @@ server.FOMM<-function(input,output,session){
       arr.attributi<-arr.attributi[-which(arr.attributi %in% c("ID","DATE_INI","EVENT",NA))]
 
       data_reactive$numerical.att<-arr.attributi
-      data_reactive$EventLog <- all.data[["EventLog"]]
+
 
       #factor check
       if(is.factor(data_reactive$EventLog$EVENT)) { data_reactive$EventLog$EVENT <- as.character(data_reactive$EventLog$EVENT)  }
 
       showModal(modalDialog(title = "Data loading may take a few moments",easyClose = TRUE, footer=NULL))
-      # Creating DLobj
+      # DLobj
       ObjDL<<-dataLoader(verbose.mode = FALSE)
       ObjDL$load.data.frame(mydata =data_reactive$EventLog ,IDName = "ID",EVENTName = "EVENT",dateColumnName = "DATE_INI",
                             format.column.date = "%Y-%m-%d")
+
+      # FOMM obj
+      param= list("threshold"=data_reactive$th, "considerAutoLoop"= data_reactive$al)
+      data_reactive$param<-param
+      FOMMobj<-FOMM(parameters.list = param,verbose.mode = F)
+      # FOMMobj<-firstOrderMarkovModel(parameters.list = param)
+      FOMMobj$loadDataset(dataList = ObjDL$getData())
+      FOMMobj$trainModel()
+      data_reactive$FOMM<-FOMMobj
       removeModal()
       globalList <- reactiveValues(ManyChoices = unique(data_reactive$EventLog$EVENT), SelectedPrev = c())
 
@@ -480,10 +490,13 @@ server.FOMM<-function(input,output,session){
 
   })
 
+    #########################################################  MODEL TRAINING #################################################################
+
     arr.ID.train<-sample(x = unique(all.data[[1]]$ID),size = 700)
     arr.ID.test<-unique(all.data[[1]]$ID)[-which(unique(all.data[[1]]$ID) %in% arr.ID.train)]
 
     observeEvent(input$train.model,{
+      data_reactive$fun.out<-list()
 
       if(input$tec=="Hold out"){
         k<-1
@@ -518,22 +531,21 @@ server.FOMM<-function(input,output,session){
       showModal(modalDialog(title = "Training may take a few moments",
                             easyClose = TRUE, footer=NULL))
 
-      fun.train.out<-LR_FOMM_fun(eventStart = input$eventoDiPartenza,
-                  obj.out = ObjDL$getData(),
-                  eventGoal = input$eventoGoal,
-                  arr.attributes = input$arr.attributi,
-                  arr.ID.train = arr.ID.train,
-                  arr.ID.test = arr.ID.test,
-                  feature.selection = input$feature_selection,
-                  k=k,
-                  passing= passing,
-                  NOTpassing = NOTpassing,
-                  p.train=input$p.train,
-                  p.thr=input$p.thr,
-                  n.att=input$n.att,
-                  min.time= input$min.time,
-                  max.time= max_time,
-                  UM= input$um.time)
+      fun.train.out<- data_reactive$FOMM$Predictive.model(eventStart = input$eventoDiPartenza,
+                                        eventGoal = input$eventoGoal,
+                                        obj.out =  ObjDL$getData(),
+                                        arr.attributes = input$arr.attributi,
+                                        arr.ID.train = arr.ID.train,
+                                        arr.ID.test = arr.ID.test,
+                                        feature.selection = input$feature_selection,
+                                        k = k,passing = passing,
+                                        NOTpassing = NOTpassing,
+                                        p.train=input$p.train,
+                                        p.thr=input$p.thr,
+                                        n.att =input$n.att,
+                                        min.time= input$min.time,
+                                        max.time= max_time,
+                                        UM= input$um.time)
 
       removeModal()
 
@@ -542,6 +554,9 @@ server.FOMM<-function(input,output,session){
 
       output$show.train.result<-renderUI({
         fluidPage(
+          fluidRow(
+           textOutput("error.model")
+          ),
           fluidRow(
             DT::dataTableOutput("mat.att")
           ),
@@ -554,22 +569,48 @@ server.FOMM<-function(input,output,session){
         )
       })
 
-      if(fun.train.out$run.check){
-        lst.AUC.test<-lapply(data_reactive$fun.train.out$lst.model,function(model) {lapply(model, function(inner.fold){return(inner.fold$model_perf$AUC_test)})})
-
-        output$AUC_kernel_density_all<-renderPlot({
-          if(input$feature_selection){
-            AUC_KD_fun(lst.AUC.test,all.fold = TRUE)
+      output$error.model<-renderText({
+        if (fun.train.out$run.check) {
+          " "
+        } else if(is.null(data_reactive$fun.train.out$lst.model)){
+          "none of the selected attributes presented a pvalue lower than the chosen threshold  "
           }else{
-            #CASO NO FEATURE SELECTION FALSE X PLOT KERNEL DENSITY
-          }
-        })
+         "the model did not reach convergence:probably the number of patients responding to the specified path is not enough to train the model"
+        }
+      })
+
+      if(fun.train.out$run.check & (length(data_reactive$fun.train.out)!=0)){
+        #caso HOLD OUT: kernel density plot non viene mostrato
+        if(length(data_reactive$fun.train.out$lst.model)==1){
+          output$AUC_kernel_density_all<-renderPlot({})
+        }else{
+        #caso CROSS VAL: mostro kernel density AUC
+          lst.AUC.test<-lapply(data_reactive$fun.train.out$lst.model,function(model) {lapply(model, function(inner.fold){return(inner.fold$model_perf$AUC_test)})})
+
+          output$AUC_kernel_density_all<-renderPlot({
+            #caso feature selection OK
+            if(input$feature_selection & (length(data_reactive$fun.train.out)!=0)){
+              AUC_KD_fun(lst.AUC.test,all.fold = TRUE)
+            }else{
+              #CASO NO FEATURE SELECTION FALSE X PLOT KERNEL DENSITY
+            }
+          })
+
+        }
+
+
+
         output$mat.att<- DT::renderDataTable(data_reactive$fun.train.out$mat.perf.total)
-      }else{
+
+        }else{
         output$mat.att<- DT::renderDataTable(data.frame())
-      }
+        }
 
       })
+
+    observeEvent(input$feature_selection,{
+      data_reactive$fun.train.out<-list()
+    })
 
     observeEvent(input$mat.att_rows_selected,{
     fun.train.out<-data_reactive$fun.train.out
@@ -585,13 +626,12 @@ server.FOMM<-function(input,output,session){
     # feature.selection<-input$feature_selection
     output$final.roc<-renderPlot({
       if(length(input$mat.att_rows_selected)){
-          if(!input$feature_selection){
+          if(!input$feature_selection || (input$feature_selection & (length(data_reactive$fun.train.out$lst.model)==1))){
             df_roc_test<-fun.train.out$final.model$roc_test
             df_roc<-fun.train.out$final.model$roc_train
             AUC_test<-fun.train.out$final.model$AUC_test
             AUC<-fun.train.out$final.mode$AUC_train
           }else{
-
             df_roc_test<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$final.model$roc_test
             df_roc<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$final.model$roc_train
             AUC_test<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$final.model$AUC_test
@@ -622,8 +662,224 @@ server.FOMM<-function(input,output,session){
 
     })
 
+    #########################################################  PATH ANALYSIS FUNCTIONS #################################################################
     #server function for path1
     callModule(path_data_server,"path1",data_reactive$EventLog,input$add.path+1,is.fomm= TRUE)
+
+    #ADD TAB PATH E AGGIORNO CHECKBOX PATH TO PLOT
+    observeEvent(input$add.path,{
+      insertTab("path.tab",
+                tabPanel(paste("Path",input$add.path+1),
+                         path_mod_ui(paste0("path",input$add.path+1),tit = paste("Path",input$add.path+1),is.fomm= TRUE,node.list=data_reactive$node.list,el.data = data_reactive$EventLog,is.strat.var=FALSE)
+                         ),
+                target = paste("Path", input$add.path),
+                position = "after",
+                select = TRUE)
+      #server fun x path mod
+      callModule(path_data_server,session = session, paste0("path",input$add.path+1),data_reactive$EventLog,input$add.path+1,is.fomm= TRUE)
+
+      paths.rm <- c()
+      for (nomi.path in names(all.path)) {
+        if ((all.path[[nomi.path]][["id.end"]]=="") || (all.path[[nomi.path]][["id.start"]]==""))
+          paths.rm <- c(paths.rm, nomi.path)
+      }
+
+      if (length(paths.rm) ==1) {
+        all.path[[paths.rm]] <- NULL
+      }else if(length(paths.rm)>1){
+        for (i in c(1:length(paths.rm))) {
+          all.path[[paths.rm[i]]]<-NULL
+          }
+        }
+
+      #aggiorno lista path salvati
+      data_reactive$paths<-all.path
+      data_reactive$paths.rm<-paths.rm
+      #e quelli che voglio plottare (tutti)
+      choices_list<-names(all.path)
+      updateCheckboxGroupInput(session, inputId = "path.plot",
+                               label = "",
+                               choices = choices_list ,
+                               selected =choices_list)
+      })
+
+    #CREAZIONE DEL PLOT KM
+    observeEvent(input$plot.all.surv,{
+      paths.rm <- c()
+      for (nomi.path in names(all.path)) {
+        if ((all.path[[nomi.path]][["id.end"]]=="") || (all.path[[nomi.path]][["id.start"]]==""))
+          paths.rm <- c(paths.rm, nomi.path)
+      }
+
+      if (length(paths.rm) ==1) {
+        all.path[[paths.rm]] <- NULL
+      }else if(length(paths.rm)>1){
+        for (i in c(1:length(paths.rm))) {
+          all.path[[paths.rm[i]]]<-NULL
+        }
+
+      }
+
+
+      data_reactive$paths<-all.path
+      data_reactive$paths.rm<-paths.rm
+      choices_list<-names(data_reactive$paths)
+
+      updateCheckboxGroupInput(session, inputId = "path.plot",
+                               label = "",
+                               choices = choices_list ,
+                               selected =choices_list)
+      data_reactive$paths.to.plot<-names(data_reactive$paths)
+
+      if(length(data_reactive$paths)==0){
+        sendSweetAlert(
+          session = session,
+          title = "Error",
+          text = "At least one path must be entered",
+          type = "primary"
+        )
+      }else{
+
+        fun.out<-render.km.graph.FOMM(data_reactive$paths,data_reactive$paths.to.plot)
+
+        output$error.mex<-renderText({
+          if (length(data_reactive$paths.rm) == 0) {
+            " "
+
+          } else{
+            paste( data_reactive$paths.rm,
+                  "not shown: please check values entred")
+          }
+
+        })
+
+
+        output$km.curves<-renderPlot({
+          if(length(fun.out)==3){
+            survminer::ggsurvplot(fun.out$final.surv,
+                       data = fun.out$final.data,
+                       conf.int = TRUE,          # Add confidence interval
+                       risk.table = TRUE,        # Add risk table
+                       risk.table.height = 0.27,
+                       # Risk table color by groups
+                       risk.table.col = "strata")
+            }
+          })
+
+        output$logrank.res<- DT::renderDataTable({
+          p(h4(strong("Results of Logrank test on Paths")))
+          if(length(all.path)>1){
+            logrank_fun(fun.out,data_reactive$paths)
+          }else{
+            data.frame()
+            }
+        })
+
+        }
+
+      #creazione plot andamento covariate nel tempo
+      if(is.null(input$covariate.time) || input$covariate.time==""){
+
+      }else{
+        arr.from<-do.call("cbind",do.call("rbind",data_reactive$paths)[,1])
+        lst.to<-do.call("rbind",data_reactive$paths)[,2]
+        pass<-do.call("rbind",data_reactive$paths)[,9]
+        not.pass<-do.call("rbind",data_reactive$paths)[,10]
+
+
+        #SERIE DI CONTROLLI CHE VANNO SISTEMATI:
+        #sto assumendo che se length(unique(data_reactive$EventLog[,input$covariate]))<7 allora la cov che sto considerando è categorica
+        if(is.null(arr.from) |is.null(lst.to[[1]])){
+          sendSweetAlert(
+            session = session,
+            title = "Error",
+            text = "Please enter values for id node start and/or id node end",
+            type = "primary"
+          )
+          output$cov_time_graph<- shiny::renderPlot()
+
+        }else{
+          output$cov_time_graph<- shiny::renderPlot({
+            if(length(unique(data_reactive$EventLog[,input$covariate.time]))<10){
+              sendSweetAlert(
+                session = session,
+                title = "Error",
+                text = "Please select numerical variables as covariate",
+                type = "primary")
+
+            }else{
+              df_tot<-pre_fun_fomm(ObjDL = ObjDL,
+                                   FOMM = FOMM,
+                                   arr.from = arr.from,
+                                   lst.to = lst.to,
+                                   covariate = input$covariate.time,
+                                   lst.passingThrough=pass,
+                                   lst.passingNotThrough=not.pass)
+
+              if(!is.null(df_tot)){
+                plot_cov_graph(df_tot = df_tot,
+                               plot.ci.mean=input$mean.ci,
+                               delta = input$delta.mean.ci,
+                               points.symbols=20,
+                               plot.RegressionLine = input$reg.line,
+                               legend.position = input$legend.pos.cov,
+                               UM = input$UM.cov.plot,
+                               size.symbols=1.5,
+                               line.width=2,
+                               y.int.legend=0.8,
+                               legend.text.size=0.8)}
+              }
+          })
+        }
+      }
+      })
+
+
+
+    #RENDER DEL GRAFICO KM IN CADO SI DESELEZIONE DEI PATH
+    observeEvent(input$render.km.graph,{
+      data_reactive$paths<-all.path
+      if(length(data_reactive$paths)<1){
+        sendSweetAlert(
+          session = session,
+          title = "Error",
+          text = "Every time you create a new path please save it using the proper button",
+          type = "primary"
+        )
+      }else{
+
+        if(is.null(input$path.plot)){
+          fun.out<-list("id.not.valid"=c())
+        }else{
+          fun.out<-render.km.graph.FOMM(data_reactive$paths,input$path.plot)
+        }
+
+        output$error.mex<-renderText({
+          if(length(fun.out)==3 & !is.null(fun.out$id.not.valid)){
+            paste("Path",fun.out$id.not.valid, "not shown: please check values entred" )
+            # paste("please check values entered for path:",fun.out)
+          }else if(length(fun.out)==1 & !is.null(fun.out$id.not.valid)){
+            paste("please check values entered for path:",fun.out)
+          }else{
+            ""
+          }
+        })
+
+        output$km.curves<-renderPlot({
+          if(length(fun.out)==3){
+            ggsurvplot(fun.out$final.surv,
+                       data = fun.out$final.data,
+                       conf.int = TRUE,          # Add confidence interval
+                       risk.table = TRUE,        # Add risk table
+                       risk.table.height = 0.27,
+                       risk.table.col = "strata"# Risk table color by groups
+            )
+          }
+        })
+      }
+
+
+    })
 
 
     #RESET ALL PATH
@@ -728,138 +984,138 @@ server.FOMM<-function(input,output,session){
                                     ),
                                     mainPanel(
                                       tabsetPanel(id = "tabselected",
-                                        tabPanel("Survival", value = 1,
-                                          fluidRow(
-                                            column(10,
+                                                  tabPanel("Survival", value = 1,
+                                                           fluidRow(
+                                                             column(10,
 
-                                                   span(textOutput("error.mex"),style="color:gray")
+                                                                    span(textOutput("error.mex"),style="color:gray")
 
-                                            ),
-                                            column(1,
-                                                   dropdownButton(
-                                                     grVizOutput("prev.fomm"),
+                                                             ),
+                                                             column(1,
+                                                                    dropdownButton(
+                                                                      grVizOutput("prev.fomm"),
 
-                                                     circle = FALSE,
-                                                     status = "primary",
-                                                     size = "xs",
-                                                     icon = icon("project-diagram"),
-                                                     width = "1000px",
-                                                     right = TRUE,
-                                                     tags$div(style = "height: 100px;"),
-                                                     tooltip = tooltipOptions(title = "Click to more info")
-                                                   )
-                                            ),
-                                            column(1,
-                                                   dropdownButton(
-                                                     p(h4(strong("Select path to plot"))),
-                                                     checkboxGroupInput("path.plot", label = "",
-                                                                        choices = "path1",
-                                                                        selected = "path1"),
-                                                     actionButton("render.km.graph","Refresh graph"),
+                                                                      circle = FALSE,
+                                                                      status = "primary",
+                                                                      size = "xs",
+                                                                      icon = icon("project-diagram"),
+                                                                      width = "1000px",
+                                                                      right = TRUE,
+                                                                      tags$div(style = "height: 100px;"),
+                                                                      tooltip = tooltipOptions(title = "Click to more info")
+                                                                    )
+                                                             ),
+                                                             column(1,
+                                                                    dropdownButton(
+                                                                      p(h4(strong("Select path to plot"))),
+                                                                      checkboxGroupInput("path.plot", label = "",
+                                                                                         choices = "path1",
+                                                                                         selected = "path1"),
+                                                                      actionButton("render.km.graph","Refresh graph"),
 
 
-                                                     circle = FALSE,
-                                                     status = "danger",
-                                                     size = "xs",
-                                                     icon = icon("cogs"),
-                                                     width = "100px",
-                                                     right = TRUE,
-                                                     tooltip = tooltipOptions(title = "Click to more info")
-                                                   )
-                                                   # uiOutput("select.path")
+                                                                      circle = FALSE,
+                                                                      status = "danger",
+                                                                      size = "xs",
+                                                                      icon = icon("cogs"),
+                                                                      width = "100px",
+                                                                      right = TRUE,
+                                                                      tooltip = tooltipOptions(title = "Click to more info")
+                                                                    )
+                                                                    # uiOutput("select.path")
 
-                                            )
+                                                             )
 
-                                          ),
-                                          fluidRow(
-                                            column(12,
-                                                   plotOutput("km.curves",width =  "100%")
-                                            )
-                                          ),
-                                          fluidRow(
-                                            column(12,
-                                                   DT::dataTableOutput("logrank.res")
-                                            )
-                                          )
-                                        ),
-                                        tabPanel("cov-time",value = 2,
-                                                 fluidRow(
-                                                   column(10,
-                                                          shiny::plotOutput("cov_time_graph")
-                                                   ),
-                                                   column(1,
-                                                          dropdownButton(
+                                                           ),
+                                                           fluidRow(
+                                                             column(12,
+                                                                    plotOutput("km.curves",width =  "100%")
+                                                             )
+                                                           ),
+                                                           fluidRow(
+                                                             column(12,
+                                                                    DT::dataTableOutput("logrank.res")
+                                                             )
+                                                           )
+                                                  ),
+                                                  tabPanel("cov-time",value = 2,
+                                                           fluidRow(
+                                                             column(10,
+                                                                    shiny::plotOutput("cov_time_graph")
+                                                             ),
+                                                             column(1,
+                                                                    dropdownButton(
 
-                                                            fluidRow(
-                                                              column(12,
-                                                                     grVizOutput("prev.fomm.cov")
-                                                              )
-                                                            ),
-                                                            # grVizOutput("prev.cfm"),
+                                                                      fluidRow(
+                                                                        column(12,
+                                                                               grVizOutput("prev.fomm.cov")
+                                                                        )
+                                                                      ),
+                                                                      # grVizOutput("prev.cfm"),
 
-                                                            circle = FALSE,
-                                                            status = "primary",
-                                                            size = "xs",
-                                                            icon = icon("project-diagram"),
-                                                            width = "1000px",
-                                                            right = TRUE,
-                                                            tags$div(style = "height: 100px;"),
-                                                            tooltip = tooltipOptions(title = "Click to more info")
-                                                          )
-                                                   ),
-                                                   column(1,
-                                                          dropdownButton(
-                                                            p(h4(strong("Plot settings"))),
-                                                            fluidRow(
-                                                              column(6,
-                                                                     selectInput(inputId = "UM.cov.plot",
-                                                                                 label = "Select Time unit",
-                                                                                 choices = c("mins","days","weeks","months","years"),
-                                                                                 selected = "days")
-                                                              ),
-                                                              column(6,
-                                                                     selectInput(inputId = "legend.pos.cov",
-                                                                                 label = "Set legend position",
-                                                                                 choices = c("bottomright", "bottom", "bottomleft",
-                                                                                             "left", "topleft", "top", "topright", "right", "center"),
-                                                                                 selected = "topleft")
-                                                              )
-                                                            ),
-                                                            fluidRow(
-                                                              column(6,
-                                                                     materialSwitch(
-                                                                       inputId = "reg.line",
-                                                                       label = "plot regression line",
-                                                                       status = "primary",
-                                                                       right = TRUE
-                                                                     )
-                                                              )
-                                                            ),
-                                                            fluidRow(
-                                                              column(6,
-                                                                     materialSwitch(
-                                                                       inputId = "mean.ci",
-                                                                       label = "plot mean and c.i.",
-                                                                       status = "primary",
-                                                                       right = TRUE
-                                                                     )
-                                                              ),
-                                                              column(6,
-                                                                     numericInput("delta.mean.ci", label = "Select time window:", value = 10,min = 5),
-                                                              )
+                                                                      circle = FALSE,
+                                                                      status = "primary",
+                                                                      size = "xs",
+                                                                      icon = icon("project-diagram"),
+                                                                      width = "1000px",
+                                                                      right = TRUE,
+                                                                      tags$div(style = "height: 100px;"),
+                                                                      tooltip = tooltipOptions(title = "Click to more info")
+                                                                    )
+                                                             ),
+                                                             column(1,
+                                                                    dropdownButton(
+                                                                      p(h4(strong("Plot settings"))),
+                                                                      fluidRow(
+                                                                        column(6,
+                                                                               selectInput(inputId = "UM.cov.plot",
+                                                                                           label = "Select Time unit",
+                                                                                           choices = c("mins","days","weeks","months","years"),
+                                                                                           selected = "days")
+                                                                        ),
+                                                                        column(6,
+                                                                               selectInput(inputId = "legend.pos.cov",
+                                                                                           label = "Set legend position",
+                                                                                           choices = c("bottomright", "bottom", "bottomleft",
+                                                                                                       "left", "topleft", "top", "topright", "right", "center"),
+                                                                                           selected = "topleft")
+                                                                        )
+                                                                      ),
+                                                                      fluidRow(
+                                                                        column(6,
+                                                                               materialSwitch(
+                                                                                 inputId = "reg.line",
+                                                                                 label = "plot regression line",
+                                                                                 status = "primary",
+                                                                                 right = TRUE
+                                                                               )
+                                                                        )
+                                                                      ),
+                                                                      fluidRow(
+                                                                        column(6,
+                                                                               materialSwitch(
+                                                                                 inputId = "mean.ci",
+                                                                                 label = "plot mean and c.i.",
+                                                                                 status = "primary",
+                                                                                 right = TRUE
+                                                                               )
+                                                                        ),
+                                                                        column(6,
+                                                                               numericInput("delta.mean.ci", label = "Select time window:", value = 10,min = 5),
+                                                                        )
 
-                                                            ),
-                                                            circle = FALSE,
-                                                            status = "danger",
-                                                            size = "xs",
-                                                            icon = icon("cogs"),
-                                                            width = "400px",
-                                                            right = TRUE,
-                                                            tooltip = tooltipOptions(title = "Click to more info")
-                                                          )
-                                                   )
-                                                 )
-                                        )
+                                                                      ),
+                                                                      circle = FALSE,
+                                                                      status = "danger",
+                                                                      size = "xs",
+                                                                      icon = icon("cogs"),
+                                                                      width = "400px",
+                                                                      right = TRUE,
+                                                                      tooltip = tooltipOptions(title = "Click to more info")
+                                                                    )
+                                                             )
+                                                           )
+                                                  )
 
                                       )
 
@@ -872,244 +1128,8 @@ server.FOMM<-function(input,output,session){
                 ),
                 target = "FOMM",
                 position = "after",select = TRUE
-                )
+      )
 
-
-
-    })
-
-
-    #ADD TAB PATH E AGGIORNO CHECKBOX PATH TO PLOT
-    observeEvent(input$add.path,{
-      insertTab("path.tab",
-                tabPanel(paste("Path",input$add.path+1),
-                         path_mod_ui(paste0("path",input$add.path+1),tit = paste("Path",input$add.path+1),is.fomm= TRUE,node.list=data_reactive$node.list,el.data = data_reactive$EventLog,is.strat.var=FALSE)
-                         ),
-                target = paste("Path", input$add.path),
-                position = "after",
-                select = TRUE
-                )
-      #server fun x path mod
-      callModule(path_data_server,session = session, paste0("path",input$add.path+1),data_reactive$EventLog,input$add.path+1,is.fomm= TRUE)
-
-
-      paths.rm <- c()
-      for (nomi.path in names(all.path)) {
-        if ((all.path[[nomi.path]][["id.end"]]=="") || (all.path[[nomi.path]][["id.start"]]==""))
-          paths.rm <- c(paths.rm, nomi.path)
-      }
-
-      if (length(paths.rm) ==1) {
-        all.path[[paths.rm]] <- NULL
-      }else if(length(paths.rm)>1){
-        for (i in c(1:length(paths.rm))) {
-          all.path[[paths.rm[i]]]<-NULL
-        }
-
-      }
-
-      #aggiorno lista path salvati
-      data_reactive$paths<-all.path
-      data_reactive$paths.rm<-paths.rm
-      #e quelli che voglio plottare (tutti)
-      choices_list<-names(all.path)
-      updateCheckboxGroupInput(session, inputId = "path.plot",
-                               label = "",
-                               choices = choices_list ,
-                               selected =choices_list)
-      })
-
-    #CREAZIONE DEL PLOT KM
-    observeEvent(input$plot.all.surv,{
-      paths.rm <- c()
-      for (nomi.path in names(all.path)) {
-        if ((all.path[[nomi.path]][["id.end"]]=="") || (all.path[[nomi.path]][["id.start"]]==""))
-          paths.rm <- c(paths.rm, nomi.path)
-      }
-
-      if (length(paths.rm) ==1) {
-        all.path[[paths.rm]] <- NULL
-      }else if(length(paths.rm)>1){
-        for (i in c(1:length(paths.rm))) {
-          all.path[[paths.rm[i]]]<-NULL
-        }
-
-      }
-
-
-      data_reactive$paths<-all.path
-      data_reactive$paths.rm<-paths.rm
-      choices_list<-names(data_reactive$paths)
-
-      updateCheckboxGroupInput(session, inputId = "path.plot",
-                               label = "",
-                               choices = choices_list ,
-                               selected =choices_list)
-      data_reactive$paths.to.plot<-names(data_reactive$paths)
-
-      if(length(data_reactive$paths)==0){
-        sendSweetAlert(
-          session = session,
-          title = "Error",
-          text = "At least one path must be entered",
-          type = "primary"
-        )
-      }else{
-
-        fun.out<-render.km.graph.FOMM(data_reactive$paths,data_reactive$paths.to.plot)
-
-        output$error.mex<-renderText({
-          if (length(data_reactive$paths.rm) == 0) {
-            " "
-
-          } else{
-            paste( data_reactive$paths.rm,
-                  "not shown: please check values entred")
-          }
-          #caso in cui non ho trovato
-          # if(length(fun.out)!=3){
-          #   paste("please check values entered for path:",fun.out)
-          # }else if(!is.null(fun.out$id.not.valid)){
-          #   paste("Path",fun.out$id.not.valid, "not shown: please check values entred" )
-          # }else{
-          #   ""
-          # }
-
-          })
-
-        output$km.curves<-renderPlot({
-          if(length(fun.out)==3){
-            survminer::ggsurvplot(fun.out$final.surv,
-                       data = fun.out$final.data,
-                       conf.int = TRUE,          # Add confidence interval
-                       risk.table = TRUE,        # Add risk table
-                       risk.table.height = 0.27,
-                       # Risk table color by groups
-                       risk.table.col = "strata")
-            }
-          })
-
-        output$logrank.res<- DT::renderDataTable({
-          p(h4(strong("Results of Logrank test on Paths")))
-          if(length(all.path)>1){
-            logrank_fun(fun.out,data_reactive$paths)
-          }else{
-            data.frame()
-            }
-        })
-
-        }
-
-      #creazione plot andamento covariate nel tempo
-      if(is.null(input$covariate.time) || input$covariate.time==""){
-
-      }else{
-
-        arr.from<-do.call("cbind",do.call("rbind",data_reactive$paths)[,1])
-        lst.to<-do.call("rbind",data_reactive$paths)[,2]
-        pass<-do.call("rbind",data_reactive$paths)[,9]
-        not.pass<-do.call("rbind",data_reactive$paths)[,10]
-
-
-        #SERIE DI CONTROLLI CHE VANNO SISTEMATI:
-        #sto assumendo che se length(unique(data_reactive$EventLog[,input$covariate]))<7 allora la cov che sto considerando è categorica
-        if(is.null(arr.from) |is.null(lst.to[[1]])){
-          sendSweetAlert(
-            session = session,
-            title = "Error",
-            text = "Please enter values for id node start and/or id node end",
-            type = "primary"
-          )
-          output$cov_time_graph<- shiny::renderPlot()
-
-        }else{
-          output$cov_time_graph<- shiny::renderPlot({
-            if(length(unique(data_reactive$EventLog[,input$covariate.time]))<10){
-              sendSweetAlert(
-                session = session,
-                title = "Error",
-                text = "Please select numerical variables as covariate",
-                type = "primary")
-
-            }else{
-              df_tot<-pre_fun_fomm(ObjDL = ObjDL,
-                                   FOMM = FOMM,
-                                   arr.from = arr.from,
-                                   lst.to = lst.to,
-                                   covariate = input$covariate.time,
-                                   lst.passingThrough=pass,
-                                   lst.passingNotThrough=not.pass)
-
-              if(!is.null(df_tot)){
-                plot_cov_graph(df_tot = df_tot,
-                               plot.ci.mean=input$mean.ci,
-                               delta = input$delta.mean.ci,
-                               points.symbols=20,
-                               plot.RegressionLine = input$reg.line,
-                               legend.position = input$legend.pos.cov,
-                               UM = input$UM.cov.plot,
-                               size.symbols=1.5,
-                               line.width=2,
-                               y.int.legend=0.8,
-                               legend.text.size=0.8)}
-              }
-          })
-        }
-      }
-      })
-
-
-
-    #RENDER DEL GRAFICO KM IN CADO SI DESELEZIONE DEI PATH
-    observeEvent(input$render.km.graph,{
-
-
-      data_reactive$paths<-all.path
-      if(length(data_reactive$paths)<1){
-        sendSweetAlert(
-          session = session,
-          title = "Error",
-          text = "Every time you create a new path please save it using the proper button",
-          type = "primary"
-        )
-      }else{
-
-        if(is.null(input$path.plot)){
-
-          fun.out<-list("id.not.valid"=c())
-        }else{
-
-          fun.out<-render.km.graph.FOMM(data_reactive$paths,input$path.plot)
-        }
-
-        output$error.mex<-renderText({
-          if(length(fun.out)==3 & !is.null(fun.out$id.not.valid)){
-            paste("Path",fun.out$id.not.valid, "not shown: please check values entred" )
-            # paste("please check values entered for path:",fun.out)
-          }else if(length(fun.out)==1 & !is.null(fun.out$id.not.valid)){
-            paste("please check values entered for path:",fun.out)
-          }else{
-            ""
-          }
-        })
-
-
-
-
-        output$km.curves<-renderPlot({
-          if(length(fun.out)==3){
-            ggsurvplot(fun.out$final.surv,
-                       data = fun.out$final.data,
-                       conf.int = TRUE,          # Add confidence interval
-                       risk.table = TRUE,        # Add risk table
-                       risk.table.height = 0.27,
-                       risk.table.col = "strata"# Risk table color by groups
-            )
-          }else{
-
-          }
-        })
-      }
 
 
     })
@@ -1124,13 +1144,17 @@ server.FOMM<-function(input,output,session){
     })
 
 
+
     fomm.graph<-reactive({
-      param= list("threshold"=data_reactive$th, "considerAutoLoop"= data_reactive$al)
-      FOMM<-firstOrderMarkovModel(parameters.list = param)
-      FOMM$loadDataset(dataList = ObjDL$getData())
-      FOMM$trainModel()
-      data_reactive$FOMM<-FOMM
-      fomm.plot<-FOMM$getModel(kindOfOutput = "grViz")
+
+      # param= list("threshold"=data_reactive$th, "considerAutoLoop"= data_reactive$al)
+      # data_reactive$param<-param
+      # FOMMobj<<-FOMM(parameters.list = param)
+      # # FOMMobj<-firstOrderMarkovModel(parameters.list = param)
+      # FOMMobj$loadDataset(dataList = ObjDL$getData())
+      # FOMMobj$trainModel()
+      # data_reactive$FOMM<-FOMMobj
+      fomm.plot<-data_reactive$FOMM$getModel(kindOfOutput = "grViz")
       return(fomm.plot)
     })
 
@@ -1143,7 +1167,7 @@ server.FOMM<-function(input,output,session){
     })
 
 
-    #################################################### SURVIVAL ANALYSIS TAB ##############################################################################
+    #################################################### FOMM GRAPH TAB FUNCTIONS ##############################################################################
 
     output$prev.fomm<-renderGrViz({
       grViz(fomm.graph())
