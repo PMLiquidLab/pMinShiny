@@ -506,18 +506,12 @@ server.FOMM<-function(input,output,session){
 
       if(is.null(input$passing)){
         passing<-c()
-      # }
-      # else if(length(which(input$passing %in% c(input$eventoDiPartenza, input$eventoGoal)))>0){
-      #   passing<-c()
       }else{
         passing<-input$passing
       }
 
       if(is.null(input$NOTpassing)){
         NOTpassing<-c()
-      # }
-      # else if(input$NOTpassing %in% c(input$eventoDiPartenza, input$eventoGoal, input$passing)){
-      #   NOTpassing<-c()
       }else{
         NOTpassing<-input$NOTpassing
       }
@@ -526,6 +520,12 @@ server.FOMM<-function(input,output,session){
         max_time<-Inf
       }else{
         max_time<-input$max.time
+      }
+
+      if(!input$feature_selection){
+        n.att<-length(input$arr.attributi)
+      }else{
+        n.att<-input$n.att
       }
 
       showModal(modalDialog(title = "Training may take a few moments",
@@ -542,10 +542,11 @@ server.FOMM<-function(input,output,session){
                                         NOTpassing = NOTpassing,
                                         p.train=input$p.train,
                                         p.thr=input$p.thr,
-                                        n.att =input$n.att,
+                                        n.att =n.att,
                                         min.time= input$min.time,
-                                        max.time= max_time,
-                                        UM= input$um.time)
+                                        max.time= max.time,omit.missing=T,
+                                        UM= input$um.time,
+                                        )
 
       removeModal()
 
@@ -1147,13 +1148,13 @@ server.FOMM<-function(input,output,session){
 
     fomm.graph<-reactive({
 
-      # param= list("threshold"=data_reactive$th, "considerAutoLoop"= data_reactive$al)
-      # data_reactive$param<-param
-      # FOMMobj<<-FOMM(parameters.list = param)
-      # # FOMMobj<-firstOrderMarkovModel(parameters.list = param)
-      # FOMMobj$loadDataset(dataList = ObjDL$getData())
-      # FOMMobj$trainModel()
-      # data_reactive$FOMM<-FOMMobj
+      param= list("threshold"=data_reactive$th, "considerAutoLoop"= data_reactive$al)
+      data_reactive$param<-param
+      FOMMobj<<-FOMM(parameters.list = param)
+      # FOMMobj<-firstOrderMarkovModel(parameters.list = param)
+      FOMMobj$loadDataset(dataList = ObjDL$getData())
+      FOMMobj$trainModel()
+      data_reactive$FOMM<-FOMMobj
       fomm.plot<-data_reactive$FOMM$getModel(kindOfOutput = "grViz")
       return(fomm.plot)
     })
