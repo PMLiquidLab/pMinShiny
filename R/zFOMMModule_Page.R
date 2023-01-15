@@ -573,7 +573,7 @@ server.FOMM<-function(input,output,session){
       output$error.model<-renderText({
         if (fun.train.out$run.check) {
           " "
-        } else if(is.null(data_reactive$fun.train.out$lst.model)){
+        } else if(is.null(data_reactive$fun.train.out$lst.model) & input$feature_selection){
           "none of the selected attributes presented a pvalue lower than the chosen threshold  "
           }else{
          "the model did not reach convergence:probably the number of patients responding to the specified path is not enough to train the model"
@@ -916,18 +916,33 @@ server.FOMM<-function(input,output,session){
                                         ),
                                         column(3,
                                                dropdownButton(
-                                                 tags$h4(strong("Survival Analysis with Kaplan Meier")),
+                                                 tags$h4(strong(
+                                                   "Path Analysis"
+                                                 )),
 
-                                                 tags$h5("The cohort consists of patients transiting through the node chosen as the start node,
-                                                         which must be selected in the ", strong("\"node id start\" field."),"and who have experienced a certain state of interest,
-                                                         which must be made explicit in the", strong("\"node id end\" field.")),
+                                                 tags$h5("In this section it is possible to perform analysis on the pathways taken by patients.
+                                       In the sidebar, it is possible to outline the paths of interest through the proposed inputs."),
 
-                                                 tags$h5("Through the", strong("\"id node censored\" field") ," it will be possible to indicate in which nodes the patients will have to transit
-                                                 to in order to be considered censored."),
+                                                 tags$h5(strong("Survival Analysis with Kaplan Meier")),
 
+                                                 tags$h5(
+                                                   "The first tab is dedicated to the survival analysis. The cohort consists of patients transiting through the node chosen as the start node,
+                                                         which must be selected in the ",
+                                                   strong("\"event start\" field."),
+                                                   "and who have experienced a certain state of interest,
+                                                         which must be made explicit in the",
+                                                   strong("\"event end\" field.")
+                                                 ),
 
-                                                 tags$h5("using the input ",strong("\"use leaf as cens\"")," it will be possible to choose whether to follow the clinical follow-up of patients up to the last event they experienced"),
+                                                 tags$h5(
+                                                   "Through the",
+                                                   strong("\"node censored\" field") ,
+                                                   " it will be possible to indicate in which nodes the patients will have to transit
+                                                 to in order to be considered censored."
+                                                 ),
 
+                                                 tags$h5(strong("Covariate analysis")),
+                                                 tags$h5("In this second tab you can view the evolution of the selected covariate over time, for each path"),
 
                                                  circle = FALSE,
                                                  status = "info",

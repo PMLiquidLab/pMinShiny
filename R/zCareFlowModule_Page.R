@@ -135,18 +135,15 @@ server.careFlow <- function(input, output, session) {
                     br(),
                     p(
                       h5(
-                        "A stratification variable can be entered in this section.
-                                              In this way it is possible to analyze whether the two groups into which the total population
-                                              is divided, present significant differences in terms of the pathway calculated by the Care Flow Miner"
+                        "This section presents the process model computed with the Care Flow Mining algorithm.
+                        It is possible to change the parameters of the algorithm (support and depth) by acting on the specific inputs."
                       )
                     ),
                     br(),
 
                     p(
-                      h5(
-                        "Using the inputs in the Parameter Setting bar, it is possibile to select the stratification var,
-                                              set whether the variable you choose is categorical or numerical, and explicit the specific values
-                                              for stratification"
+                      h5("Through the switches it is possible both to color the different nodes of the graph based on the median of the times to reach the node
+                         and to show the leaf nodes even if the chosen depth is lower than the maximum depth"
                       )
                     ),
 
@@ -156,7 +153,7 @@ server.careFlow <- function(input, output, session) {
                       h5(
                         "The inferential analysis presented is accomplished by considering the",
                         strong("number of patients passing through each node."),
-                        "it is possible to compare the different sub-courses with respect to",
+                        "it is possible to compare the different sub-cohorts with respect to",
                         strong("time to arrive at the node"),
                         "and for the",
                         strong("probability of experiencing a given event of interest")
@@ -434,7 +431,7 @@ server.careFlow <- function(input, output, session) {
                   p(
                     h5(
                       "It is possible to highlight with different colors events
-                                           that may be more interesting. (Max 7 events"
+                                           that may be more interesting. (Max 7 events)"
                     )
                   ),
                   fluidRow(column(
@@ -479,11 +476,16 @@ server.careFlow <- function(input, output, session) {
                              3,
                              dropdownButton(
                                tags$h4(strong(
-                                 "Survival Analysis with Kaplan Meier"
+                                 "Path Analysis"
                                )),
 
+                               tags$h5("In this section it is possible to perform analysis on the pathways taken by patients.
+                                       In the sidebar, it is possible to outline the paths of interest through the proposed inputs."),
+
+                               tags$h5(strong("Survival Analysis with Kaplan Meier")),
+
                                tags$h5(
-                                 "The cohort consists of patients transiting through the node chosen as the start node,
+                                 "The first tab is dedicated to the survival analysis. The cohort consists of patients transiting through the node chosen as the start node,
                                                          which must be selected in the ",
                                  strong("\"node id start\" field."),
                                  "and who have experienced a certain state of interest,
@@ -504,6 +506,9 @@ server.careFlow <- function(input, output, session) {
                                  strong("\"use leaf as cens\""),
                                  " it will be possible to choose whether to follow the clinical follow-up of patients up to the last event they experienced"
                                ),
+
+                               tags$h5(strong("Covariate analysis")),
+                               tags$h5("In this second tab you can view the evolution of the selected covariate over time, for each path"),
 
 
                                circle = FALSE,
