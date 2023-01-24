@@ -8,7 +8,7 @@ visual.mod<-function(){
   all.data<<-list()
   shinyApp(ui = tagList(
     fluidPage(
-      navbarPage("pMining: EventLog Visual Analysis", id="tabs",
+      navbarPage("pMinShiny: Event Log Inspection", id="tabs",
                  tabPanel("Loading Data",
                           titlePanel("Data Uploading"),
                           br(),

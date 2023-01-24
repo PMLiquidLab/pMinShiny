@@ -16,7 +16,7 @@ FOMM.mod<-function(){
   all.path<<-list()
   shinyApp(ui =fluidPage(
     #Pagina Principale
-    navbarPage("pMining: First Order Markov Model", id="tabs",
+    navbarPage("pMinShiny: First Order Markov Model", id="tabs",
                tabPanel("Loading EventLog",
                         titlePanel("EventLog Uploading"),
                         br(),

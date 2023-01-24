@@ -14,7 +14,7 @@ careFlow.mod<-function(){
   all.path<<-list()
   shinyApp(ui =fluidPage(
     #Pagina Principale
-    navbarPage("pMining: CareFlow Mining", id="tabs",
+    navbarPage("pMinShiny: CareFlow Miner", id="tabs",
                tabPanel("Loading EventLog",
                         titlePanel("EventLog Uploading"),
                         br(),

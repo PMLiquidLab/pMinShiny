@@ -450,7 +450,7 @@ server.descr<-function(input,output,session){
                                       #   )
                                       # ),
                                       fluidRow(
-                                        selectizeInput(inputId = "id","Select paz or a group of paz",
+                                        selectizeInput(inputId = "id","Select patient or a group of patients",
                                                        choices = NULL, multiple = TRUE)
                                       )
                                       # conditionalPanel("output.moregr== 'yes' ",
@@ -548,7 +548,7 @@ server.descr<-function(input,output,session){
                     input$um.time,
                     input$event.between,
                     input$event.NOT.between),{
-    shiny::updateSelectizeInput(inputId = "id",label = "Select paz or a group of paz",
+    shiny::updateSelectizeInput(inputId = "id",label = "Select patient or a group of patients",
                       choices = matrix_taceid()[,1],selected =  "NA")
   },ignoreInit = T)
 
