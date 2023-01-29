@@ -1193,7 +1193,7 @@ server.careFlow <- function(input, output, session) {
     })
 
 
-    #################################################################################################################################################################################
+    # #################################################################################################################################################################################
 
 
 
@@ -1419,7 +1419,7 @@ server.careFlow <- function(input, output, session) {
       data_reactive$paths.to.plot <- input$path.plot
     })
 
-    ####################################  RENDER OUTPUT CFM TAB #################################################
+    # ####################################  RENDER OUTPUT CFM TAB #################################################
     observeEvent(input$depth, {
       if (is.na(input$depth)) {
         data_reactive$depth <- 1
@@ -1491,8 +1491,7 @@ server.careFlow <- function(input, output, session) {
         time.unique <- unique(median.time[order(median.time)])
         cut.off <- floor(length(time.unique) / 4)
         col.threshold <-
-          c(time.unique[cut.off], time.unique[cut.off * 2], time.unique[cut.off *
-                                                                          3])
+          c(time.unique[cut.off], time.unique[cut.off * 2], time.unique[cut.off * 3])
       } else{
         col.threshold <- c()
       }
@@ -1524,29 +1523,37 @@ server.careFlow <- function(input, output, session) {
     })
 
 
-    ##############################  CFM STRATIFICATO ################################################
+    # ##############################  CFM STRATIFICATO ################################################
     observeEvent(input$strat.var, {
-      shiny::updateSelectInput(
-        inputId = "strat.value1",
-        label = "Select possible value fot the selected var:",
-        choices = unique(data_reactive$EventLog[input$strat.var]),
-        selected = NULL
-      )
-      shiny::updateSelectInput(
-        inputId = "strat.value2",
-        label = "Select possible value fot the selected var:",
-        choices = unique(data_reactive$EventLog[input$strat.var]),
-        selected = NULL
-      )
+      if(input$strat.var!=""){
+        shiny::updateSelectInput(
+          inputId = "strat.value1",
+          label = "Select possible value fot the selected var:",
+          choices = unique(data_reactive$EventLog[input$strat.var]),
+          selected = NULL
+        )
+
+        shiny::updateSelectInput(
+          inputId = "strat.value2",
+          label = "Select possible value fot the selected var:",
+          choices = unique(data_reactive$EventLog[input$strat.var]),
+          selected = NULL
+        )
+
+      }
+
     })
 
     observeEvent(input$strat.value1, {
-      shiny::updateSelectInput(
-        inputId = "strat.value2",
-        label = "Select possible value fot the selected var:",
-        choices = unique(data_reactive$EventLog[input$strat.var])[!unique(data_reactive$EventLog[input$strat.var]) %in% input$strat.value1],
-        selected = NULL
-      )
+      if(input$strat.value1!=""){
+        shiny::updateSelectInput(
+          inputId = "strat.value2",
+          label = "Select possible value fot the selected var:",
+          choices = unique(data_reactive$EventLog[input$strat.var])[!unique(data_reactive$EventLog[input$strat.var]) %in% input$strat.value1],
+          selected = NULL
+        )
+      }
+
 
     })
 
@@ -1561,13 +1568,13 @@ server.careFlow <- function(input, output, session) {
       data_reactive$strat.plot <- strat_CFMgraph_fun()
     },ignoreInit = TRUE)
 
-    # observeEvent(input$perc.end,{
-    #   data_reactive$strat.plot <- strat_CFMgraph_fun()
-    # })
-    #
-    # observeEvent(input$refresh, {
-    #   data_reactive$strat.plot <- strat_CFMgraph_fun()
-    # })
+    observeEvent(input$perc.end,{
+      data_reactive$strat.plot <- strat_CFMgraph_fun()
+    })
+
+    observeEvent(input$refresh, {
+      data_reactive$strat.plot <- strat_CFMgraph_fun()
+    })
 
     strat_CFMgraph_fun <- reactive({
       if (input$max_depth) {
@@ -1648,7 +1655,7 @@ server.careFlow <- function(input, output, session) {
 
 
 
-    ######################################################### CFM RAPPRESENTAZIONI X PREV (messe nei pop up del modulo path analysis) ############################################
+    # ######################################################### CFM RAPPRESENTAZIONI X PREV (messe nei pop up del modulo path analysis) ############################################
     output$prev.cfm <- renderGrViz({
       cfm.type <- input$prev.cfm.type
       switch (
