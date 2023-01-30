@@ -1,5 +1,5 @@
 #'@import pMineR
-#'@import timevis
+#'@importFrom timevis timevis
 
 
 

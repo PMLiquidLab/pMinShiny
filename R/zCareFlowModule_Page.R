@@ -1,15 +1,15 @@
 #'@title Careflow module: main page
 #'
-#'@import shiny
+#'@rawNamespace import(shiny, except = c(renderDataTable,dataTableOutput))
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
+#'@importFrom DT renderDataTable dataTableOutput
 #'@import pMineR
 #'@import DiagrammeR
 #'@import shinyjqui
 #'@import survival
 #'@import survminer
-#'@import shinyjs
+#'@importFrom shinyjs useShinyjs toggleState
 
 
 
@@ -352,9 +352,9 @@ server.careFlow <- function(input, output, session) {
 
               mainPanel(
                 conditionalPanel("input.strat_CFM",
-                                 jqui_resizable(grVizOutput("CF.strat"))),
+                                 shinyjqui::jqui_resizable(grVizOutput("CF.strat"))),
                 conditionalPanel("!input.strat_CFM",
-                                 jqui_resizable(grVizOutput(
+                                 shinyjqui::jqui_resizable(grVizOutput(
                                    "CareFlowGraph"
                                  )))
               )

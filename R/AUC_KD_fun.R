@@ -1,5 +1,5 @@
-#'@import stats
-#'@import graphics
+#'@importFrom stats density
+#'@rawNamespace import(graphics, except = box)
 
 AUC_KD_fun<-function(lst.arr.AUC,ind.fold=c(),all.fold=FALSE){
   if(all.fold){

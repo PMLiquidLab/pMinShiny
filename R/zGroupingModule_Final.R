@@ -2,11 +2,10 @@
 #'
 #'
 #'@import rlang
-#'@import shiny
+#'@rawNamespace import(shiny, except = c(renderDataTable,dataTableOutput))
 #'@import shinythemes
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
 #'@impot  ggplot2
 #'@import sortable
 #'@import pMineR

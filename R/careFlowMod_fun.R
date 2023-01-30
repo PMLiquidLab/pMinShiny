@@ -1,10 +1,9 @@
 #'@title Careflow module fun
 #'
-#'@import shiny
+#'@rawNamespace import(shiny,except = c(renderDataTable,dataTableOutput))
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
-#'@import shinyjs
+#'@importFrom shinyjs useShinyjs toggleState
 #'@export
 
 

@@ -1,17 +1,8 @@
 #'@title function for mean and ci
 #'
 
-#'@import stats
+#'@importFrom stats density
 
-
-
-
-# alfa<-0.05 #alfa
-# delta<-50 #ampiezza finestra temporale per il campionamento
-#covariate: grandezza di interesse
-#tech: 1<- calcolo degli intervalli media+t*sqrt(var/n)
-#      2<- density function
-#      3<- bootstrapping
 
 ci.mean.fun<-function(alfa,delta,df_tot,covariate,tech="1"){
 
@@ -37,7 +28,7 @@ ci.mean.fun<-function(alfa,delta,df_tot,covariate,tech="1"){
           },
 
           "2" = {
-            dx<-density(sub.group)
+            dx<-stats::density(sub.group)
 
           },
           "3" = {
@@ -67,36 +58,5 @@ ci.mean.fun<-function(alfa,delta,df_tot,covariate,tech="1"){
 }
 
 
-# plot(x = d_mean$time,y = d_mean$mean,type = "l",xlab = "time",ylab = "mean", ylim = c(min(d_mean$lower),max(d_mean$upper)))
-# col<-col2rgb("red", alpha = FALSE)/255
-# polygon(x=c(d_mean$time,
-#             rev(d_mean$time)),
-#         y=c(d_mean$upper, rev(d_mean$lower)),
-#         col=rgb(red =col[1,1],green =col[2,1] ,blue =col[3,1] ,alpha = 0.1
-#         ),
-#         density = 100, angle=90)
-#
-#
-# # lines(d_mean$time,d_mean$lower )
-# # lines(d_mean$time,d_mean$upper )
-# lines(d_mean$time, d_mean$mean,col="red")
-# #
-# #
-# #   eb <- aes(ymax = df_mean$upper, ymin = df_mean$lower)
-# # ggplot(data = df_mean, aes(x = time, y = mean)) +
-# #   geom_line(size = 1,col="red") +
-# #   geom_ribbon(eb, alpha = 0.1,fill="red")
-# #
-# #
-# # ggplot(data=df_tot, aes(x=time, y=covariate))
-# #
-# #   stat_summary(fun.data ="mean_sdl", mult=1, ) + theme_bw()
-# p<-array()
-# for (i in c(1:length(dx_norm$x))) {
-#   x<-dx_norm$x[i]
-#   p[i]<-integrate(f,min(dx_norm$x),x)$value
-#
-#
-# }
 
 

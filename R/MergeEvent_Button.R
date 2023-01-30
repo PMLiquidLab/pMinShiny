@@ -1,6 +1,6 @@
 #'@title Merge module: Merge by Event button
 #'
-#'@import shiny
+#'@rawNamespace import(shiny, except = c(renderDataTable,dataTableOutput))
 #'@import dplyr
 #'@import shinyWidgets
 

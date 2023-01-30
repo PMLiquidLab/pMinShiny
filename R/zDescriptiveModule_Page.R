@@ -2,12 +2,12 @@
 #'
 #'
 #'@import rlang
-#'@import shiny
+#'@rawNamespace import(shiny, except = c(renderDataTable,dataTableOutput))
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
-#'@import kableExtra
-#'@import timevis
+#'@importFrom DT renderDataTable dataTableOutput
+#'@rawNamespace import(kableExtra, except = group_rows)
+#'@importFrom timevis timevisOutput renderTimevis
 #'@import pMineR
 
 

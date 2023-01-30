@@ -1,9 +1,9 @@
 #'@title module for data loading
 #'
-#'@import shiny
+#'@rawNamespace import(shiny,  except = c(renderDataTable,dataTableOutput))
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
+#'@importFrom DT renderDataTable dataTableOutput
 
 
 import_mod_ui<- function(id, tit,flag,col_setting=FALSE){

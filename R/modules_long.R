@@ -1,8 +1,8 @@
 #'@title Merge module: page for ancillary data recap and both merging techniques
 #'
-#'@import shiny
+#'@rawNamespace import(shiny,  except = c(renderDataTable,dataTableOutput))
 #'@import shinyWidgets
-#'@import DT
+#'@importFrom DT renderDataTable dataTableOutput
 
 
 

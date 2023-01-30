@@ -1,9 +1,9 @@
 #'@title Merge module: Merge by eventsettings
 #'
-#'@import shiny
-#'@import dplyr
-#'@import shinyWidgets
 
+#'@import dplyr
+#'@rawNamespace import(shiny,  except = c(renderDataTable,dataTableOutput))
+#'@importFrom DT renderDataTable dataTableOutput
 
 ui_merge.ev<-function(id,data,num){
   ns<-NS(id)

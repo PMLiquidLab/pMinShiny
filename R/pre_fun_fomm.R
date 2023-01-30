@@ -1,8 +1,7 @@
 #'@title function for cov analysis xFOMM
 #'
 #'@import pMineR
-#'@import graphics
-#'@import stats
+
 
 
 # covariate<-colnames(all.data[[1]])[15]

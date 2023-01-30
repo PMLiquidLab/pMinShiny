@@ -1,10 +1,11 @@
 #'@title MODULE x STRAT KM
 #'
 #'@import pMineR
-#'@import shiny
+#'@rawNamespace import(shiny,  except = c(renderDataTable,dataTableOutput))
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
+#'@importFrom DT renderDataTable dataTableOutput
+
 
 
 path_mod_ui<- function(id, tit,

@@ -1,4 +1,4 @@
-
+#'@importFrom stats predict
 
 compute.perf.fun<-function(model, df){
   pred<-predict(model,newdata= df, type="response")

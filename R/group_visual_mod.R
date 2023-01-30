@@ -1,12 +1,13 @@
 #'@title dict_visual_mod: first grouping mod
 #'
 #'
-#'@import shiny
+#'@rawNamespace import(shiny,except = c(renderDataTable,dataTableOutput))
 #'@import shinythemes
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
-#'@import shinydashboard
+#'@importFrom DT renderDataTable dataTableOutput
+#'@importFrom shinydashboard box
+
 
 
 

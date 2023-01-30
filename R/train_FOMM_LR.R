@@ -1,6 +1,6 @@
 
-#'@import stats
-#'@import graphics
+#'@importFrom stats glm
+
 
 
 

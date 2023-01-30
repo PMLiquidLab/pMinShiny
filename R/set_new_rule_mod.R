@@ -1,6 +1,6 @@
 #'@title Merge module: Merge by attribute specific rules settings
 #'
-#'@import shiny
+#'@rawNamespace import(shiny, except = c(renderDataTable,dataTableOutput))
 #'@import shinyWidgets
 
 

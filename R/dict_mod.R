@@ -1,11 +1,11 @@
 #'@title dict_mod: first grouping mod
 #'
 #'
-#'@import shiny
+#'@rawNamespace import(shiny, except = c(dataTableOutput,renderDataTable))
 #'@import shinythemes
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
+#'@importFrom DT renderDataTable dataTableOutput
 #'@impot  stringr
 #'@import sortable
 

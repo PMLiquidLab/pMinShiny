@@ -1,9 +1,9 @@
 #'@title Merge module: main page
 #'
-#'@import shiny
+#'@rawNamespace import(shiny, except = c(renderDataTable,dataTableOutput))
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
+#'@importFrom DT renderDataTable dataTableOutput
 #'@import rlang
 #'@import shinybusy
 #'@import pMineR

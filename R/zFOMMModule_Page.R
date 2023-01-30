@@ -1,14 +1,14 @@
 #'@title FOMM module: main page
 #'
-#'@import shiny
+#'@rawNamespace import(shiny, except = c(renderDataTable,dataTableOutput))
 #'@import dplyr
 #'@import shinyWidgets
-#'@import DT
+#'@importFrom DT renderDataTable dataTableOutput
 #'@import pMineR
 #'@import DiagrammeR
 #'@import shinyjqui
 #'@import survminer
-#'@import shinyjs
+#'@importFrom shinyjs useShinyjs toggleState
 
 server.FOMM<-function(input,output,session){
   #visualizzazione EventLog
@@ -136,7 +136,7 @@ server.FOMM<-function(input,output,session){
                                         )
                                       ),
 
-                                    mainPanel(jqui_resizable(grVizOutput("fomm.Graph")))
+                                    mainPanel(shinyjqui::jqui_resizable(grVizOutput("fomm.Graph")))
                                     )
                                   )
                            )
@@ -492,7 +492,7 @@ server.FOMM<-function(input,output,session){
 
     #########################################################  MODEL TRAINING #################################################################
 
-    arr.ID.train<-sample(x = unique(all.data[[1]]$ID),size = 700)
+    arr.ID.train<-sample(x = unique(all.data[[1]]$ID),size = length(unique(all.data[[1]]$ID))*0.7)
     arr.ID.test<-unique(all.data[[1]]$ID)[-which(unique(all.data[[1]]$ID) %in% arr.ID.train)]
 
     observeEvent(input$train.model,{

@@ -1,8 +1,8 @@
 #'@title function for cov analysis
 #'
 #'@import pMineR
-#'@import graphics
-#'@import stats
+#'@importFrom stats glm
+#'@rawNamespace import(graphics, except = box)
 
 
 
@@ -218,7 +218,7 @@ cov_time_fun<-function(ObjDL,
         if(plot.ci.mean){
           lines(x = d_mean$time,y = d_mean$mean,type = "l",xlab = "time",ylab = "mean", ylim = c(min(d_mean$lower),max(d_mean$upper)),col=arr.colore[i,'colore'])
           col<-col2rgb(arr.colore[i,'colore'], alpha = FALSE)/255
-          polygon(x=c(d_mean$time,
+          graphics::polygon(x=c(d_mean$time,
                       rev(d_mean$time)),
                   y=c(d_mean$upper, rev(d_mean$lower)),
                   col=rgb(red =col[1,1],green =col[2,1] ,blue =col[3,1] ,alpha = 0.1

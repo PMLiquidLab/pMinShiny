@@ -1,6 +1,5 @@
 #'@title apply dict function
-#'
-#'
+
 
 
 applyDict<-function(  column.name="GROUP" ,

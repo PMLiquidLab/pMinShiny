@@ -1,5 +1,6 @@
-#' @import shiny
-#'
+
+#'@rawNamespace import(shiny, except = c(renderDataTable, dataTableOutput))
+#'@importFrom DT renderDataTable dataTableOutput
 
 
 
