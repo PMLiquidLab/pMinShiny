@@ -13,18 +13,28 @@ Let's start by loading the library
 library(pMinShiny)
 
 ```
-
-
-## Visualization of user interfaces
-
-At this point you will be able to view  the modules by running the following instructions from the command line:
-
-```
-visual.mod()
-careFlow.mod()
-FOMM.mod()
-
-```
 <br>
 
 ***Useful tips***: in case any errors occur when running the "careflow.mod()" function, please check that the DiagrammeR version installed is at least 1.0.9
+
+## Running the GUIs
+
+You can run the GUIs modules by the following instructions:
+
+```
+# for the Event Log and traces inspections: 
+visual.mod()
+
+# Process Discovery with CareFlow Miner
+careFlow.mod()
+
+# Process Discovery with a first order markov model
+FOMM.mod()
+
+```
+
+## Manuals
+
+please, visit: http://www.pminer.info/progetti/pMineR/pMinShiny/docs/_book/index.html
+
+
