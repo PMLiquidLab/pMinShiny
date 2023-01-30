@@ -6,7 +6,7 @@
 #'@import shinythemes
 #'@import dplyr
 #'@import shinyWidgets
-#'@impot  ggplot2
+#'@import  ggplot2
 #'@import sortable
 #'@import pMineR
 

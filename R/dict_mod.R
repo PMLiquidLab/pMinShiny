@@ -6,7 +6,7 @@
 #'@import dplyr
 #'@import shinyWidgets
 #'@importFrom DT renderDataTable dataTableOutput
-#'@impot  stringr
+#'@import  stringr
 #'@import sortable
 
 
