@@ -1,5 +1,9 @@
 # pMinShiny
 
+## Manuals
+
+please, visit: http://www.pminer.info/progetti/pMineR/pMinShiny/docs/_book/index.html
+
 ## To install the package: 
 
 ```
@@ -33,8 +37,6 @@ FOMM.mod()
 
 ```
 
-## Manuals
 
-please, visit: http://www.pminer.info/progetti/pMineR/pMinShiny/docs/_book/index.html
 
 
