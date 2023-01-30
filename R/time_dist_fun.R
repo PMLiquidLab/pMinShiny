@@ -4,7 +4,7 @@
 #'in order to highlight how the distribution of each event changes over time. it is also possible to
 #'set a time window in order to analize event distribution in a smaller temporal range.
 #'
-#'@import lubridate
+#'@importFrom lubridate quarter
 #'@import dplyr
 #'@import ggplot2
 #'
@@ -89,7 +89,7 @@ time_dist<-function(data,chosen,date_range){
   # new_data<-subset(new_data, events %in% chosen)
   final_data<-new_data[which((new_data$date_var<=date_range[2] & new_data$date_var>date_range[1]) & events %in% chosen),]
   # final_data<-filter(new_data, (date_var<=date_range[2] & date_var>date_range[1]) & events %in% chosen)
-  final_data$date_var<-as.factor(quarter(final_data$date_var,with_year = TRUE, fiscal_start = 1))
+  final_data$date_var<-as.factor(lubridate::quarter(final_data$date_var,with_year = TRUE, fiscal_start = 1))
 
   groups<-final_data %>% group_by(date_var,events)
   sum<- groups %>% summarise(n=n())
