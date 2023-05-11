@@ -492,8 +492,8 @@ server.FOMM<-function(input,output,session){
 
     #########################################################  MODEL TRAINING #################################################################
 
-    arr.ID.train<-sample(x = unique(all.data[[1]]$ID),size = length(unique(all.data[[1]]$ID))*0.7)
-    arr.ID.test<-unique(all.data[[1]]$ID)[-which(unique(all.data[[1]]$ID) %in% arr.ID.train)]
+    arr.ID.train<-as.character(sample(x = unique(all.data[[1]][,ObjDL$getData()$csv.IDName]),size = length(unique(all.data[[1]][,ObjDL$getData()$csv.IDName]))*0.7))
+    arr.ID.test<-as.character(unique(all.data[[1]][,ObjDL$getData()$csv.IDName])[-which(unique(all.data[[1]][,ObjDL$getData()$csv.IDName]) %in% arr.ID.train)])
 
     observeEvent(input$train.model,{
       data_reactive$fun.out<-list()
@@ -517,6 +517,7 @@ server.FOMM<-function(input,output,session){
       }
 
       if(input$max.time.inf){
+        print("qui")
         max_time<-Inf
       }else{
         max_time<-input$max.time
@@ -531,6 +532,22 @@ server.FOMM<-function(input,output,session){
       showModal(modalDialog(title = "Training may take a few moments",
                             easyClose = TRUE, footer=NULL))
 
+      # fun.train.out<-LR_FOMM_fun(eventStart = input$eventoDiPartenza,
+      #                                                     eventGoal = input$eventoGoal,
+      #                                                     obj.out =  ObjDL$getData(),
+      #                                                     arr.attributes = input$arr.attributi,
+      #                                                     arr.ID.train = arr.ID.train,
+      #                                                     arr.ID.test = arr.ID.test,
+      #                                                     feature.selection = input$feature_selection,
+      #                                                     k = k,passing = passing,
+      #                                                     NOTpassing = NOTpassing,
+      #                                                     p.train=input$p.train,
+      #                                                     p.thr=input$p.thr,
+      #                                                     n.att =n.att,
+      #                                                     min.time= input$min.time,
+      #                                                     max.time= input$max.time,omit.missing=T,
+      #                                                     UM= input$um.time)
+
       fun.train.out<- data_reactive$FOMM$Predictive.model(eventStart = input$eventoDiPartenza,
                                         eventGoal = input$eventoGoal,
                                         obj.out =  ObjDL$getData(),
@@ -544,13 +561,16 @@ server.FOMM<-function(input,output,session){
                                         p.thr=input$p.thr,
                                         n.att =n.att,
                                         min.time= input$min.time,
-                                        max.time= max.time,omit.missing=T,
-                                        UM= input$um.time,
-                                        )
+                                        max.time= max_time,omit.missing=T,
+                                        UM= input$um.time)
+
 
       removeModal()
 
       data_reactive$fun.train.out<-fun.train.out$res
+      # print(fun.train.out)
+      # print("==============")
+      names(data_reactive$fun.train.out)<-c("final.model","lst.model","mat.perf.total")
 
 
       output$show.train.result<-renderUI({
@@ -627,18 +647,27 @@ server.FOMM<-function(input,output,session){
     # feature.selection<-input$feature_selection
     output$final.roc<-renderPlot({
       if(length(input$mat.att_rows_selected)){
-          if(!input$feature_selection || (input$feature_selection & (length(data_reactive$fun.train.out$lst.model)==1))){
+
+          if(!input$feature_selection){
+            print(names(fun.train.out))
+            print(names(fun.train.out[[1]]))
             df_roc_test<-fun.train.out$final.model$roc_test
             df_roc<-fun.train.out$final.model$roc_train
             AUC_test<-fun.train.out$final.model$AUC_test
-            AUC<-fun.train.out$final.mode$AUC_train
+            AUC<-fun.train.out$final.model$AUC_train
           }else{
-            df_roc_test<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$final.model$roc_test
-            df_roc<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$final.model$roc_train
-            AUC_test<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$final.model$AUC_test
-            AUC<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$final.model$AUC_train
-          }
+            if(length(data_reactive$fun.train.out$lst.model)==1){
+              lst.res<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]
+            }else{
+              lst.res<-fun.train.out$final.model[[input$mat.att_rows_selected[1]]]$final.model
 
+            }
+            df_roc_test<-lst.res$roc_test
+            df_roc<-lst.res$roc_train
+            AUC_test<-lst.res$AUC_test
+            AUC<-lst.res$AUC_train
+
+          }
 
           plot.roc <- plot(df_roc$FPR, df_roc$TPR, type="l", xlim=c(0,1), ylim=c(0,1), lwd=2,
                            xlab= "FRP",ylab="TPR",col= "gray")+
