@@ -549,16 +549,9 @@ import_data_server<- function(input,
   output$ex.date<-renderText(date()[1])
 
   observeEvent(input$save.date,{
-    if(colnames(all.data[[1]])[which(colnames(myData())==data_re$date)]!="DATE_INI"){
-      sendSweetAlert(
-        session = session,
-        title = "Error in Variable Mapping:",
-        text = "Please first save the changes in the var mapping section, then proceed to the Date Format Setting",
-        type = "primary"
-      )
-    }else{
-      if(!is.na(as.Date(format(as.Date(all.data[[1]][,"DATE_INI"],date()[2]), "%Y-%m-%d")[1], "%Y-%m-%d"))){
-        all.data[[1]][,"DATE_INI"]<<- format(as.Date(all.data[[1]][,"DATE_INI"],date()[2]), "%Y-%m-%d")
+    print(data_re$date)
+      if(!is.na(as.Date(format(as.Date(all.data[[1]][,data_re$date],date()[2]), "%Y-%m-%d")[1], "%Y-%m-%d"))){
+        all.data[[1]][,data_re$date]<<- format(as.Date(all.data[[1]][,data_re$date],date()[2]), "%Y-%m-%d")
       }else{
         sendSweetAlert(
           session = session,
@@ -567,7 +560,26 @@ import_data_server<- function(input,
           type = "primary"
         )
       }
-    }
+
+    # if(colnames(all.data[[1]])[which(colnames(myData())==data_re$date)]!="DATE_INI"){
+    #   sendSweetAlert(
+    #     session = session,
+    #     title = "Error in Variable Mapping:",
+    #     text = "Please first save the changes in the var mapping section, then proceed to the Date Format Setting",
+    #     type = "primary"
+    #   )
+    # }else{
+    #   if(!is.na(as.Date(format(as.Date(all.data[[1]][,"DATE_INI"],date()[2]), "%Y-%m-%d")[1], "%Y-%m-%d"))){
+    #     all.data[[1]][,"DATE_INI"]<<- format(as.Date(all.data[[1]][,"DATE_INI"],date()[2]), "%Y-%m-%d")
+    #   }else{
+    #     sendSweetAlert(
+    #       session = session,
+    #       title = "Error",
+    #       text = "Check Date Format",
+    #       type = "primary"
+    #     )
+    #   }
+    # }
   })
 
   return(data_re)
