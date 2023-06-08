@@ -397,10 +397,10 @@ server.descr<-function(input,output,session){
 
                                       fluidRow(
                                         column(4,
-                                               numericInput("time.b", label = "Set min time:", value = 0)
+                                               numericInput("time.b", label = "Set min time:", value = 0,min = 1)
                                                ),
                                         column(4,
-                                               numericInput("time.a", label = "Set max time:", value = 20)
+                                               numericInput("time.a", label = "Set max time:", value = 20,min = 1)
                                                ),
                                         column(4,
                                                switchInput(
@@ -516,22 +516,6 @@ server.descr<-function(input,output,session){
 
   })
 
-  # rv.moregr <- reactiveValues(show.moregr = FALSE)
-  #
-  # observeEvent(input$more.graph, ({
-  #   rv.moregr$show.moregr <- !(rv.moregr$show.moregr)
-  # }))
-  #
-  # output$moregr <- renderText({
-  #   if(!rv.moregr$show.moregr){
-  #     "yes"
-  #   } else{
-  #     "no"
-  #   }
-  # })
-  #
-  # outputOptions(output, "moregr", suspendWhenHidden = FALSE)
-
   output$more.graph.ui<-renderUI({
     fluidRow(
       timevis::timevisOutput("timeVis.timeline")
@@ -585,6 +569,9 @@ server.descr<-function(input,output,session){
 
   })
 
+
+
+
   observeEvent(input$event.between,{
     data_reactive$ev.bet<-input$event.between
     shiny::updateSelectInput(
@@ -599,18 +586,41 @@ server.descr<-function(input,output,session){
   })
 
 
+
 #======================================================== ID TRACE DATA TABLE ===============================================
   matrix_taceid<-reactive({
-    matrix.id<-trace.id(objQOD,
-                        input$event.start,
-                        input$event.end,
-                        input$time.b,
-                        input$time.a,
-                        input$inf,
-                        input$um.time,
-                        input$event.between,
-                        input$event.NOT.between,
-                        comp.mat = TRUE)
+    if(is.na(input$time.a) | is.na(input$time.b)){
+      time.b<-0
+      time.a<-Inf
+    }else{
+      time.b<-input$time.b
+      time.a<-input$time.a
+    }
+
+    if(input$inf){
+      time.a<-Inf
+    }
+    # if(is.na(input$event.between)){
+    #   betw<-c()
+    # }
+    #
+    # if(is.na(input$event.NOT.between)){
+    #   NO.btw<-c()
+    # }
+
+    matrix.id<-objQOD$query(from = input$event.start,to = input$event.end,time.range = c(time.b,time.a),UM = input$um.time,
+                 arr.passingThrough = input$event.between,arr.NOTpassingThrough = input$event.NOT.between,returnCompleteMatrix = T   )
+
+    # matrix.id<-trace.id(objQOD,
+    #                     input$event.start,
+    #                     input$event.end,
+    #                     input$time.b,
+    #                     input$time.a,
+    #                     input$inf,
+    #                     input$um.time,
+    #                     input$event.between,
+    #                     input$event.NOT.between,
+    #                     comp.mat = TRUE)
 
     datax<-as.data.frame(matrix.id)
     colnames(datax)[1]<-"ID"
@@ -629,17 +639,43 @@ server.descr<-function(input,output,session){
   #======================================================== TRACE TIME LINE ===================================================
 
   plot.traceid<-reactive({
-    id<-trace.id(objQOD,
-                 input$event.start,
-                 input$event.end,
-                 input$time.b,
-                 input$time.a,
-                 input$inf,
-                 input$um.time,
-                 input$event.between,
-                 input$event.NOT.between,
-                 comp.mat = FALSE)
-    plot.trace<-plot.timeline.fun(objQOD,id,input$um.time, input$time.a, input$inf, input$id.legend)
+    if(is.na(input$time.a) | is.na(input$time.b)){
+      time.b<-0
+      time.a<-Inf
+    }else{
+      time.b<-input$time.b
+      time.a<-input$time.a
+    }
+
+    if(input$inf){
+      time.a<-Inf
+    }
+
+    # if(is.na(input$event.between)){
+    #  betw<-c()
+    # }
+    #
+    # if(is.na(input$event.NOT.between)){
+    #   NO.btw<-c()
+    # }
+    matrix.id<-objQOD$query(from = input$event.start,to = input$event.end,time.range = c(time.b,time.a),UM = input$um.time,
+                            arr.passingThrough = input$event.between,arr.NOTpassingThrough =input$event.NOT.between ,returnCompleteMatrix = T )
+
+    print(matrix.id)
+    plot.trace<-objQOD$plotTimeline(arr.ID = matrix.id[,1],UM = input$um.time,max.time = Inf,ID.on.y.label = input$id.legend,Time.on.x.label = TRUE)
+
+
+    # id<-trace.id(objQOD,
+    #              input$event.start,
+    #              input$event.end,
+    #              input$time.b,
+    #              input$time.a,
+    #              input$inf,
+    #              input$um.time,
+    #              input$event.between,
+    #              input$event.NOT.between,
+    #              comp.mat = FALSE)
+    # plot.trace<-plot.timeline.fun(objQOD,id,input$um.time, input$time.a, input$inf, input$id.legend)
     return(plot.trace)
   })
 
@@ -691,6 +727,8 @@ server.descr<-function(input,output,session){
     validate(
       need(length(data_reactive$event_delete)>1, "You need at least 2 different events")
     )
+
+    # plot_fin<-objQOD$eventHeatmap(threshold.low = 0)
 
     plot_fin<-heatmap(data_reactive$EventLog,data_reactive$event_delete,objDL.new)
     return(plot_fin)

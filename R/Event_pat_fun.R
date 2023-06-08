@@ -34,13 +34,21 @@ event_pat<-function(data,chosen,flag){
   sum<-gr %>% summarise(n=n())
   data_frame<-as.data.frame(sum)
   colnames(data_frame)<-c("ID","EVENT","n")
-  count<-array()
-  perc<-array()
-  for (i in c(1:length(chosen)) ) {
-    count[i]<-dim(data_frame[data_frame$EVENT==chosen[i] & data_frame$n<2,])[1]
-    perc[i]<-(count[i]/length(unique(data$ID)))*100
-  }
-  data_frame<-data.frame(chosen,count,perc)
+  count<-as.matrix(table(data_frame$EVENT))
+  perc<-(count[,1]/length(unique(data$ID)))*100
+
+
+  # count<-array()
+  # perc<-array()
+  #
+  #
+  # for (i in c(1:length(chosen)) ) {
+  #   data_frame[data_frame$EVENT==chosen[i] & data_frame$n<2,]
+  #   # count[i]<-dim(data_frame[data_frame$EVENT==chosen[i] & data_frame$n<2,])[1]
+  #   perc[i]<-(count[i]/length(unique(data$ID)))*100
+  # }
+  # data_frame<-data.frame(chosen,count,perc)
+  data_frame<-data.frame(rownames(count),count,perc)
   colnames(data_frame)<-c("events","count","perc")
   #flag==FALSE --> perc
   if(!flag){
