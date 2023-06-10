@@ -120,7 +120,6 @@ server.descr<-function(input,output,session){
       if(is.factor(data_reactive$EventLog$EVENT)) { data_reactive$EventLog$EVENT <- as.character(data_reactive$EventLog$EVENT)  }
       data_reactive$event_delete<-unique(data_reactive$EventLog$EVENT)
 
-      print(head(data_reactive$EventLog))
 
       objDL.new <<- dataLoader(verbose.mode = FALSE)
       objDL.new$load.data.frame(mydata =data_reactive$EventLog ,IDName = "ID",EVENTName = "EVENT",dateColumnName = "DATE_INI",
@@ -377,14 +376,14 @@ server.descr<-function(input,output,session){
                                         column(6,
                                                selectInput("event.start",
                                                            label = "starting event:",
-                                                           choices = unique(data_reactive$EventLog[,4])
+                                                           choices = unique(data_reactive$EventLog[,"EVENT"])
                                                )
                                         ),
                                         column(6,
                                                selectInput("event.end",
                                                            label = "last event:",
-                                                           choices = unique(data_reactive$EventLog[,4]),
-                                                           selected = unique(data_reactive$EventLog[,4])[2]
+                                                           choices = unique(data_reactive$EventLog[,"EVENT"]),
+                                                           selected = unique(data_reactive$EventLog[,"EVENT"])[2]
 
 
                                                )
@@ -431,14 +430,14 @@ server.descr<-function(input,output,session){
                                         column(6,
                                                selectInput("event.between",
                                                            label = "Event Between:",
-                                                           choices = unique(data_reactive$EventLog[,4]),
+                                                           choices = unique(data_reactive$EventLog[,"EVENT"]),
                                                            multiple = TRUE)
                                                ),
 
                                         column(6,
                                                selectInput("event.NOT.between",
                                                            label = "Event NOT Between:",
-                                                           choices = unique(data_reactive$EventLog[,4]),
+                                                           choices = unique(data_reactive$EventLog[,"EVENT"]),
                                                            multiple = TRUE)
                                                )
                                       ),
@@ -534,8 +533,9 @@ server.descr<-function(input,output,session){
                     input$um.time,
                     input$event.between,
                     input$event.NOT.between),{
-    shiny::updateSelectizeInput(inputId = "id",label = "Select patient or a group of patients",
-                      choices = matrix_taceid()[,1],selected =  "NA")
+                      suppressWarnings(shiny::updateSelectizeInput(inputId = "id",label = "Select patient or a group of patients",
+                                                                   choices = matrix_taceid()[,1],selected =  "NA"))
+
   },ignoreInit = T)
 
 
@@ -611,7 +611,7 @@ server.descr<-function(input,output,session){
     # }
 
     matrix.id<-objQOD$query(from = input$event.start,to = input$event.end,time.range = c(time.b,time.a),UM = input$um.time,
-                 arr.passingThrough = input$event.between,arr.NOTpassingThrough = input$event.NOT.between,returnCompleteMatrix = T   )
+                 arr.passingThrough = input$event.between,arr.NOTpassingThrough = input$event.NOT.between,returnCompleteMatrix = T)
 
     # matrix.id<-trace.id(objQOD,
     #                     input$event.start,

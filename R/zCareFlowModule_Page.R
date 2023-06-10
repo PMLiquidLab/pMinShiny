@@ -1526,19 +1526,22 @@ server.careFlow <- function(input, output, session) {
     # ##############################  CFM STRATIFICATO ################################################
     observeEvent(input$strat.var, {
       if(input$strat.var!=""){
-        shiny::updateSelectInput(
+        suppressWarnings(shiny::updateSelectInput(
           inputId = "strat.value1",
           label = "Select possible value fot the selected var:",
           choices = unique(data_reactive$EventLog[input$strat.var]),
           selected = NULL
-        )
+        ))
 
-        shiny::updateSelectInput(
+        suppressWarnings(shiny::updateSelectInput(
           inputId = "strat.value2",
           label = "Select possible value fot the selected var:",
           choices = unique(data_reactive$EventLog[input$strat.var]),
           selected = NULL
-        )
+        ))
+
+
+
 
       }
 
@@ -1546,12 +1549,13 @@ server.careFlow <- function(input, output, session) {
 
     observeEvent(input$strat.value1, {
       if(input$strat.value1!=""){
-        shiny::updateSelectInput(
+        suppressWarnings( shiny::updateSelectInput(
           inputId = "strat.value2",
           label = "Select possible value fot the selected var:",
           choices = unique(data_reactive$EventLog[input$strat.var])[!unique(data_reactive$EventLog[input$strat.var]) %in% input$strat.value1],
           selected = NULL
-        )
+        ))
+
       }
 
 

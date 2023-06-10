@@ -549,7 +549,6 @@ import_data_server<- function(input,
   output$ex.date<-renderText(date()[1])
 
   observeEvent(input$save.date,{
-    print(data_re$date)
       if(!is.na(as.Date(format(as.Date(all.data[[1]][,data_re$date],date()[2]), "%Y-%m-%d")[1], "%Y-%m-%d"))){
         all.data[[1]][,data_re$date]<<- format(as.Date(all.data[[1]][,data_re$date],date()[2]), "%Y-%m-%d")
       }else{
