@@ -91,6 +91,8 @@ server.FOMM<-function(input,output,session){
       ObjDL<<-dataLoader(verbose.mode = FALSE)
       ObjDL$load.data.frame(mydata =data_reactive$EventLog ,IDName = "ID",EVENTName = "EVENT",dateColumnName = "DATE_INI",
                             format.column.date = "%Y-%m-%d")
+      obj.QOD<<-QOD()
+      obj.QOD$loadDataset(ObjDL$getData())
 
       # FOMM obj
       param= list("threshold"=data_reactive$th, "considerAutoLoop"= data_reactive$al)
@@ -517,7 +519,6 @@ server.FOMM<-function(input,output,session){
       }
 
       if(input$max.time.inf){
-        print("qui")
         max_time<-Inf
       }else{
         max_time<-input$max.time
@@ -649,8 +650,8 @@ server.FOMM<-function(input,output,session){
       if(length(input$mat.att_rows_selected)){
 
           if(!input$feature_selection){
-            print(names(fun.train.out))
-            print(names(fun.train.out[[1]]))
+            # print(names(fun.train.out))
+            # print(names(fun.train.out[[1]]))
             df_roc_test<-fun.train.out$final.model$roc_test
             df_roc<-fun.train.out$final.model$roc_train
             AUC_test<-fun.train.out$final.model$AUC_test
@@ -699,8 +700,14 @@ server.FOMM<-function(input,output,session){
     #ADD TAB PATH E AGGIORNO CHECKBOX PATH TO PLOT
     observeEvent(input$add.path,{
       insertTab("path.tab",
-                tabPanel(paste("Path",input$add.path+1),
-                         path_mod_ui(paste0("path",input$add.path+1),tit = paste("Path",input$add.path+1),is.fomm= TRUE,node.list=data_reactive$node.list,el.data = data_reactive$EventLog,is.strat.var=FALSE)
+                tabPanel(
+                  paste("Path",input$add.path+1),
+                  path_mod_ui(paste0("path",input$add.path+1),
+                              tit = paste("Path",input$add.path+1),
+                              is.fomm= TRUE,
+                              node.list=data_reactive$node.list,
+                              el.data = data_reactive$EventLog,
+                              is.strat.var=FALSE)
                          ),
                 target = paste("Path", input$add.path),
                 position = "after",
@@ -713,6 +720,14 @@ server.FOMM<-function(input,output,session){
         if ((all.path[[nomi.path]][["id.end"]]=="") || (all.path[[nomi.path]][["id.start"]]==""))
           paths.rm <- c(paths.rm, nomi.path)
       }
+
+
+
+
+
+
+
+
 
       if (length(paths.rm) ==1) {
         all.path[[paths.rm]] <- NULL
@@ -815,6 +830,18 @@ server.FOMM<-function(input,output,session){
         lst.to<-do.call("rbind",data_reactive$paths)[,2]
         pass<-do.call("rbind",data_reactive$paths)[,9]
         not.pass<-do.call("rbind",data_reactive$paths)[,10]
+        min.time<-do.call("rbind",data_reactive$paths)[,5]
+        max.time<-do.call("rbind",data_reactive$paths)[,7]
+        time.inf<-do.call("rbind",data_reactive$paths)[,6]
+        um.time<-do.call("rbind",data_reactive$paths)[,8]
+
+        ind.max<-which(unlist(time.inf))
+
+        for(i in ind.max){
+          max.time[[ind.max]]<-Inf
+        }
+
+
 
 
         #SERIE DI CONTROLLI CHE VANNO SISTEMATI:
@@ -839,12 +866,16 @@ server.FOMM<-function(input,output,session){
 
             }else{
               df_tot<-pre_fun_fomm(ObjDL = ObjDL,
+                                   ObjQOD = obj.QOD,
                                    FOMM = FOMM,
                                    arr.from = arr.from,
                                    lst.to = lst.to,
                                    covariate = input$covariate.time,
                                    lst.passingThrough=pass,
-                                   lst.passingNotThrough=not.pass)
+                                   lst.passingNotThrough=not.pass,
+                                   min.time=min.time,
+                                   max.time=max.time,
+                                   um.time=um.time)
 
               if(!is.null(df_tot)){
                 plot_cov_graph(df_tot = df_tot,

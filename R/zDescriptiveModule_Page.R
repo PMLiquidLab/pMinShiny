@@ -120,6 +120,8 @@ server.descr<-function(input,output,session){
       if(is.factor(data_reactive$EventLog$EVENT)) { data_reactive$EventLog$EVENT <- as.character(data_reactive$EventLog$EVENT)  }
       data_reactive$event_delete<-unique(data_reactive$EventLog$EVENT)
 
+      print(head(data_reactive$EventLog))
+
       objDL.new <<- dataLoader(verbose.mode = FALSE)
       objDL.new$load.data.frame(mydata =data_reactive$EventLog ,IDName = "ID",EVENTName = "EVENT",dateColumnName = "DATE_INI",
                                 format.column.date = "%Y-%m-%d")
@@ -661,7 +663,6 @@ server.descr<-function(input,output,session){
     matrix.id<-objQOD$query(from = input$event.start,to = input$event.end,time.range = c(time.b,time.a),UM = input$um.time,
                             arr.passingThrough = input$event.between,arr.NOTpassingThrough =input$event.NOT.between ,returnCompleteMatrix = T )
 
-    print(matrix.id)
     plot.trace<-objQOD$plotTimeline(arr.ID = matrix.id[,1],UM = input$um.time,max.time = Inf,ID.on.y.label = input$id.legend,Time.on.x.label = TRUE)
 
 

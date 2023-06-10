@@ -15,6 +15,7 @@
 
 
 pre_fun_fomm<-function(ObjDL,
+                       ObjQOD,
                        FOMM,
                        covariate,
                        arr.from,
@@ -22,7 +23,10 @@ pre_fun_fomm<-function(ObjDL,
                        lst.passingThrough=c(),
                        lst.passingNotThrough=c(),
                        covariate.type ='attribute',
-                       is.numerical=TRUE
+                       is.numerical=TRUE,
+                       max.time=c(),
+                       min.time=c(),
+                       um.time=c()
                        # abs.threshold=NA,
                        # baseline da aggiungere quando inseriamo logica plot puntuale
 ){
@@ -74,78 +78,90 @@ pre_fun_fomm<-function(ObjDL,
     #input array start list end
     tmp.start<-lapply(1:length(arr.from), function(ind.fromState){
       fromState<-arr.from[ind.fromState]
+      arr.pass<-lst.passingThrough[[ind.fromState]]
+      arr.NOTpass<-lst.passingNotThrough[[ind.fromState]]
+      time.range<-c(min.time[[ind.fromState]],max.time[[ind.fromState]])
+      um.time<-um.time[[ind.fromState]]
+
+
+      if(is.null(arr.NOTpass)){
+        arr.NOTpass<-c()
+      }
+
+      if(is.null(arr.pass)){
+        arr.pass<-c()
+      }
 
       #a partire dall'i-esimo evento di start calcolo tutti i suoi path
       tmp.end<-lapply(1:length(lst.to[[ind.fromState]]), function(ind.toState){
         toState<-lst.to[[ind.fromState]][ind.toState]
 
-        #a questo punto ho il path che inizia con from state e termina con toState:
-        #in res sto salvando tutti gli id che seguono il path che sto esaminando
-        res1 <- lapply( MM.pat.process , function(x)  {
-          wrklst <- list()
-          wrklst$inPath <- FALSE
-          wrklst$fromRow <- NA
-          wrklst$toRow <- NA
-          eventsInPath <- c()
 
-          # Riproduci il calcolo, fra gli stati 'from' e 'to'
-          for(riga in seq(1,nrow(x))) {
+        matrice.id<-as.matrix(ObjQOD$query(from = fromState,to = toState,arr.passingThrough = arr.pass,arr.NOTpassingThrough = arr.NOTpass,
+                                           time.range = time.range,UM = um.time,returnCompleteMatrix = F ))
 
-            # trigger the begin
-            if( x[ riga , MM.csv.parameters[["csv.EVENTName"]] ] == fromState & is.na(wrklst$fromRow) ) {
-              wrklst$inPath <-TRUE
-              wrklst$fromRow <- riga
-            }
-            # trigger the end (if they have a begin)
-            if( x[ riga , MM.csv.parameters[["csv.EVENTName"]] ] == toState ) {
-              if(wrklst$inPath == TRUE ) {
-                wrklst$inPath <- FALSE
-                wrklst$toRow <- riga
-              }
-            }
+        # #a questo punto ho il path che inizia con from state e termina con toState:
+        # #in res sto salvando tutti gli id che seguono il path che sto esaminando
+        # res1 <- lapply( MM.pat.process , function(x)  {
+        #   wrklst <- list()
+        #   wrklst$inPath <- FALSE
+        #   wrklst$fromRow <- NA
+        #   wrklst$toRow <- NA
+        #   eventsInPath <- c()
+        #
+        #   # Riproduci il calcolo, fra gli stati 'from' e 'to'
+        #   for(riga in seq(1,nrow(x))) {
+        #
+        #     # trigger the begin
+        #     if( x[ riga , MM.csv.parameters[["csv.EVENTName"]] ] == fromState & is.na(wrklst$fromRow) ) {
+        #       wrklst$inPath <-TRUE
+        #       wrklst$fromRow <- riga
+        #     }
+        #     # trigger the end (if they have a begin)
+        #     if( x[ riga , MM.csv.parameters[["csv.EVENTName"]] ] == toState ) {
+        #       if(wrklst$inPath == TRUE ) {
+        #         wrklst$inPath <- FALSE
+        #         wrklst$toRow <- riga
+        #       }
+        #     }
+        #
+        #     if(wrklst$inPath == TRUE) {
+        #       eventsInPath <- c( eventsInPath ,  x[ riga , MM.csv.parameters[["csv.EVENTName"]] ] )
+        #     }
+        #   }
+        #
+        #
+        #   # ora verifica se le transizioni soddisfano le condizioni dei parametri in ingresso
+        #   possibleCandidate <- TRUE
+        #   if (is.na(wrklst$toRow)) {
+        #     possibleCandidate <- FALSE
+        #   }
+        #   ultimoStato <- x[ nrow(x) , MM.csv.parameters[["csv.EVENTName"]] ]
+        #   arr.passingThrough<-lst.passingThrough[[ind.fromState]][lst.passingThrough[[ind.fromState]]!=""]
+        #   arr.passingNotThrough<-lst.passingNotThrough[[ind.fromState]][lst.passingNotThrough[[ind.fromState]]!=""]
+        #
+        #   if( !is.na(wrklst$fromRow) & !is.na(wrklst$toRow)  ) {
+        #     if( FALSE %in% (arr.passingThrough %in% eventsInPath) & length(arr.passingThrough)>0 ) {
+        #       possibleCandidate <- FALSE
+        #     }
+        #     if( TRUE %in% (arr.passingNotThrough %in% eventsInPath) & length(arr.passingNotThrough)>0 ) {
+        #       possibleCandidate <- FALSE
+        #     }
+        #   }
+        #
+        #
+        #   lista.res <- list( "eligible" = possibleCandidate,
+        #                      eventsInPath)
+        #   return(lista.res)
+        # })
 
-            if(wrklst$inPath == TRUE) {
-              eventsInPath <- c( eventsInPath ,  x[ riga , MM.csv.parameters[["csv.EVENTName"]] ] )
-            }
-          }
-
-
-          # ora verifica se le transizioni soddisfano le condizioni dei parametri in ingresso
-          possibleCandidate <- TRUE
-          if (is.na(wrklst$toRow)) {
-            possibleCandidate <- FALSE
-          }
-          ultimoStato <- x[ nrow(x) , MM.csv.parameters[["csv.EVENTName"]] ]
-          arr.passingThrough<-lst.passingThrough[[ind.fromState]][lst.passingThrough[[ind.fromState]]!=""]
-          arr.passingNotThrough<-lst.passingNotThrough[[ind.fromState]][lst.passingNotThrough[[ind.fromState]]!=""]
-
-          if( !is.na(wrklst$fromRow) & !is.na(wrklst$toRow)  ) {
-            if( FALSE %in% (arr.passingThrough %in% eventsInPath) & length(arr.passingThrough)>0 ) {
-              possibleCandidate <- FALSE
-            }
-            if( TRUE %in% (arr.passingNotThrough %in% eventsInPath) & length(arr.passingNotThrough)>0 ) {
-              possibleCandidate <- FALSE
-            }
-          }
-
-          # if( length(withPatientID) > 0 ) {
-          #   if( !(unique(x[,MM.csv.parameters$csv.IDName]) %in% withPatientID) ) {
-          #     possibleCandidate <- FALSE
-          #   }
-          # }
-
-          lista.res <- list( "eligible" = possibleCandidate,
-                             eventsInPath)
-          return(lista.res)
-        })
-
-        #qui ho tutti gli id
-        matrice.id <- c()
-        for( ID in names(res1) ) {
-          if( res1[[ID]]$eligible == TRUE ) {
-            matrice.id <- rbind( matrice.id, c(ID, res1[[ID]]$deltaT, res1[[ID]]$event.censored ))
-          }
-        }
+        # #qui ho tutti gli id
+        # matrice.id <- c()
+        # for( ID in names(res1) ) {
+        #   if( res1[[ID]]$eligible == TRUE ) {
+        #     matrice.id <- rbind( matrice.id, c(ID, res1[[ID]]$deltaT, res1[[ID]]$event.censored ))
+        #   }
+        # }
 
         if(is.null(matrice.id)){
           df.cov.id<-list()
