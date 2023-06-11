@@ -462,8 +462,11 @@ import_data_server_visual<- function(input,
 
     if(!is.null(input$file)){
       data_re$id<-input$ID
-
     }
+
+
+
+
   })
 
   ######################################################### OBSERVE DATA ########################################################
